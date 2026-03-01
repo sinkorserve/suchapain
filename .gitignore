@@ -21,6 +21,7 @@ config/firebase.config.js
 !tsconfig.json
 !examples/*.json
 !agentapp-templates/*.json
+!config/*.example.json
 
 # IDE
 .vscode/
