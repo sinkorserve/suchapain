@@ -9,10 +9,18 @@ yarn-error.log*
 .env.local
 .env.*.local
 
-# Firebase credentials
+# Firebase credentials (NEVER COMMIT THESE!)
 config/firebase-service-account.json
 firebase-service-account.json
 serviceAccountKey.json
+firebase.config.js
+config/firebase.config.js
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!examples/*.json
+!agentapp-templates/*.json
 
 # IDE
 .vscode/
