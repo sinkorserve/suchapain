@@ -26,6 +26,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Serve static files from public directory
+app.use(express.static(join(__dirname, '../public')));
+
 // Initialize services
 let geocodingService;
 let productEventController;
