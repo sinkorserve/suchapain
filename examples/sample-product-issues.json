@@ -1,0 +1,214 @@
+[
+  {
+    "reportId": "rpt_001_abc123",
+    "category": "Appliance",
+    "make": "Samsung",
+    "model": "RF28R7351SR",
+    "modelNumber": "RF28R7351SR/AA",
+    "issue": "Refrigerator stopped cooling. Freezer works fine but refrigerator compartment temperature is 55°F instead of 37°F. Started 3 days ago.",
+    "address": "123 Main Street, San Francisco, CA 94102",
+    "zipCode": "94102",
+    "nearestIntersection": "Main St & 1st Ave",
+    "location": {
+      "lat": 37.7749,
+      "lng": -122.4194
+    },
+    "displayLocation": {
+      "lat": 37.7799,
+      "lng": -122.4148
+    },
+    "shareFullAddress": false,
+    "shareModelNumber": false,
+    "createdBy": "user_12345",
+    "createdAt": "2026-02-15T10:30:00Z",
+    "permissionRequests": []
+  },
+  {
+    "reportId": "rpt_002_def456",
+    "category": "Appliance",
+    "make": "LG",
+    "model": "LRFVS3006S",
+    "modelNumber": "LRFVS3006S",
+    "issue": "Ice maker stopped producing ice. Water dispenser works normally. No error codes displayed.",
+    "address": "456 Market Street, San Francisco, CA 94102",
+    "zipCode": "94102",
+    "nearestIntersection": "Market St & 5th St",
+    "location": {
+      "lat": 37.7849,
+      "lng": -122.4094
+    },
+    "displayLocation": {
+      "lat": 37.7799,
+      "lng": -122.4148
+    },
+    "shareFullAddress": false,
+    "shareModelNumber": true,
+    "createdBy": "user_67890",
+    "createdAt": "2026-02-20T14:15:00Z",
+    "permissionRequests": [
+      {
+        "requesterId": "user_33333",
+        "status": "pending",
+        "requestedAt": "2026-02-22T09:00:00Z"
+      }
+    ]
+  },
+  {
+    "reportId": "rpt_003_ghi789",
+    "category": "Electronics",
+    "make": "Sony",
+    "model": "XBR-65X900H",
+    "modelNumber": "XBR65X900H",
+    "issue": "TV screen has vertical lines on the right side. Lines are pink and green. Started after power outage.",
+    "address": "789 Oak Avenue, San Francisco, CA 94110",
+    "zipCode": "94110",
+    "nearestIntersection": "Oak Ave & Valencia St",
+    "location": {
+      "lat": 37.7599,
+      "lng": -122.4215
+    },
+    "displayLocation": {
+      "lat": 37.7503,
+      "lng": -122.4130
+    },
+    "shareFullAddress": true,
+    "shareModelNumber": true,
+    "createdBy": "user_11111",
+    "createdAt": "2026-02-18T16:45:00Z",
+    "permissionRequests": []
+  },
+  {
+    "reportId": "rpt_004_jkl012",
+    "category": "Appliance",
+    "make": "Whirlpool",
+    "model": "WFW9620HC",
+    "modelNumber": "WFW9620HCW",
+    "issue": "Washing machine makes loud grinding noise during spin cycle. Clothes come out clean but noise is very concerning.",
+    "address": "321 Pine Street, San Francisco, CA 94108",
+    "zipCode": "94108",
+    "nearestIntersection": "Pine St & Grant Ave",
+    "location": {
+      "lat": 37.7915,
+      "lng": -122.4052
+    },
+    "displayLocation": {
+      "lat": 37.7922,
+      "lng": -122.4082
+    },
+    "shareFullAddress": false,
+    "shareModelNumber": false,
+    "createdBy": "user_22222",
+    "createdAt": "2026-02-25T11:20:00Z",
+    "permissionRequests": [
+      {
+        "requesterId": "user_44444",
+        "status": "approved",
+        "requestedAt": "2026-02-26T08:30:00Z",
+        "approvedAt": "2026-02-26T10:15:00Z"
+      }
+    ]
+  },
+  {
+    "reportId": "rpt_005_mno345",
+    "category": "Appliance",
+    "make": "GE",
+    "model": "GDT695SSJSS",
+    "modelNumber": "GDT695SSJSS",
+    "issue": "Dishwasher not draining completely. Pool of water at bottom after cycle completes. Cleaned filter but issue persists.",
+    "address": "654 Broadway, San Francisco, CA 94133",
+    "zipCode": "94133",
+    "nearestIntersection": "Broadway & Columbus Ave",
+    "location": {
+      "lat": 37.7983,
+      "lng": -122.4073
+    },
+    "displayLocation": {
+      "lat": 37.8010,
+      "lng": -122.4104
+    },
+    "shareFullAddress": false,
+    "shareModelNumber": true,
+    "createdBy": "user_55555",
+    "createdAt": "2026-02-28T09:00:00Z",
+    "permissionRequests": []
+  },
+  {
+    "reportId": "rpt_006_pqr678",
+    "category": "Electronics",
+    "make": "Apple",
+    "model": "MacBook Pro 16\"",
+    "modelNumber": "MVVJ2LL/A",
+    "issue": "Laptop overheating during normal use. Fan runs constantly at max speed. Temperature reaches 95°C even with light tasks.",
+    "address": "987 Mission Street, San Francisco, CA 94103",
+    "zipCode": "94103",
+    "nearestIntersection": "Mission St & 6th St",
+    "location": {
+      "lat": 37.7805,
+      "lng": -122.4086
+    },
+    "displayLocation": {
+      "lat": 37.7738,
+      "lng": -122.4104
+    },
+    "shareFullAddress": false,
+    "shareModelNumber": false,
+    "createdBy": "user_66666",
+    "createdAt": "2026-02-22T13:30:00Z",
+    "permissionRequests": []
+  },
+  {
+    "reportId": "rpt_007_stu901",
+    "category": "Appliance",
+    "make": "Bosch",
+    "model": "800 Series",
+    "modelNumber": "HBL8451UC",
+    "issue": "Oven temperature is inconsistent. Set to 350°F but actual temperature varies between 320-380°F according to oven thermometer.",
+    "address": "147 Polk Street, San Francisco, CA 94102",
+    "zipCode": "94102",
+    "nearestIntersection": "Polk St & Eddy St",
+    "location": {
+      "lat": 37.7829,
+      "lng": -122.4172
+    },
+    "displayLocation": {
+      "lat": 37.7799,
+      "lng": -122.4148
+    },
+    "shareFullAddress": true,
+    "shareModelNumber": true,
+    "createdBy": "user_77777",
+    "createdAt": "2026-02-19T15:00:00Z",
+    "permissionRequests": []
+  },
+  {
+    "reportId": "rpt_008_vwx234",
+    "category": "Electronics",
+    "make": "Dell",
+    "model": "XPS 15",
+    "modelNumber": "9520",
+    "issue": "Battery draining very quickly. Full charge only lasts 2 hours with minimal use. Battery health shows 95% in diagnostics.",
+    "address": "258 Geary Boulevard, San Francisco, CA 94108",
+    "zipCode": "94108",
+    "nearestIntersection": "Geary Blvd & Powell St",
+    "location": {
+      "lat": 37.7872,
+      "lng": -122.4084
+    },
+    "displayLocation": {
+      "lat": 37.7922,
+      "lng": -122.4082
+    },
+    "shareFullAddress": false,
+    "shareModelNumber": true,
+    "createdBy": "user_88888",
+    "createdAt": "2026-02-24T10:45:00Z",
+    "permissionRequests": [
+      {
+        "requesterId": "user_99999",
+        "status": "denied",
+        "requestedAt": "2026-02-25T14:00:00Z",
+        "deniedAt": "2026-02-25T16:30:00Z"
+      }
+    ]
+  }
+]

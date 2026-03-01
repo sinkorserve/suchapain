@@ -1,0 +1,9 @@
+Report ID,Category,Make,Model,Model Number,Issue,Location,Zip Code,Created Date,Share Address,Share Model Number,Permission Requests
+rpt_001_abc123,Appliance,Samsung,RF28R7351SR,[PRIVATE],Refrigerator stopped cooling. Freezer works fine but refrigerator compartment temperature is 55°F instead of 37°F.,Near Main St & 1st Ave,94102,2026-02-15,No,No,None
+rpt_002_def456,Appliance,LG,LRFVS3006S,LRFVS3006S,Ice maker stopped producing ice. Water dispenser works normally.,Near Market St & 5th St,94102,2026-02-20,No,Yes,1 Pending
+rpt_003_ghi789,Electronics,Sony,XBR-65X900H,XBR65X900H,TV screen has vertical lines on the right side. Lines are pink and green.,789 Oak Avenue,94110,2026-02-18,Yes,Yes,None
+rpt_004_jkl012,Appliance,Whirlpool,WFW9620HC,[PRIVATE],Washing machine makes loud grinding noise during spin cycle.,Near Pine St & Grant Ave,94108,2026-02-25,No,No,1 Approved
+rpt_005_mno345,Appliance,GE,GDT695SSJSS,GDT695SSJSS,Dishwasher not draining completely. Pool of water at bottom after cycle.,Near Broadway & Columbus Ave,94133,2026-02-28,No,Yes,None
+rpt_006_pqr678,Electronics,Apple,MacBook Pro 16",[PRIVATE],Laptop overheating during normal use. Fan runs constantly at max speed.,Near Mission St & 6th St,94103,2026-02-22,No,No,None
+rpt_007_stu901,Appliance,Bosch,800 Series,HBL8451UC,Oven temperature is inconsistent. Set to 350°F but varies between 320-380°F.,147 Polk Street,94102,2026-02-19,Yes,Yes,None
+rpt_008_vwx234,Electronics,Dell,XPS 15,9520,Battery draining very quickly. Full charge only lasts 2 hours.,Near Geary Blvd & Powell St,94108,2026-02-24,No,Yes,1 Denied
