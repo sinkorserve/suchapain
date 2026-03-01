@@ -90,7 +90,7 @@ try {
 }
 
 // Initialize controller
-productEventController = new ProductEventController(firebaseService, geocodingService);
+productEventController = new ProductEventController(process.env.GOOGLE_MAPS_API_KEY);
 console.log('✓ Product Event Controller initialized');
 
 // ============================================================================
@@ -119,17 +119,16 @@ app.post('/api/reports', async (req, res) => {
       });
     }
 
-    const result = await productEventController.createProductEvent({
+    const result = await productEventController.createReport({
       category,
       make,
       model,
       modelNumber,
       issue,
       address,
-      userId: userId || process.env.DEFAULT_USER_ID || 'anonymous',
       shareFullAddress: shareFullAddress || false,
       shareModelNumber: shareModelNumber || false
-    });
+    }, userId || process.env.DEFAULT_USER_ID || 'anonymous');
 
     res.status(201).json({
       success: true,
