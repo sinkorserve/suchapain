@@ -224,7 +224,7 @@ export class ProductEventController {
    * @throws {Error} If validation fails
    */
   validateReportData(data) {
-    const required = ['category', 'make', 'model', 'modelNumber', 'issue', 'address'];
+    const required = ['category', 'make', 'model', 'issue', 'address'];
 
     for (const field of required) {
       if (!data[field] || data[field].trim() === '') {
