@@ -12,6 +12,7 @@ import { dirname, join } from 'path';
 import firebaseService from './services/FirebaseService.js';
 import { GeocodingService } from './services/GeocodingService.js';
 import { ProductEventController } from './controllers/ProductEventController.js';
+import { authenticateUser, optionalAuth } from './middleware/authMiddleware.js';
 
 // Load environment variables
 dotenv.config();
@@ -106,10 +107,10 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Create a product event report
-app.post('/api/reports', async (req, res) => {
+// Create a product event report (REQUIRES AUTHENTICATION)
+app.post('/api/reports', authenticateUser, async (req, res) => {
   try {
-    const { category, make, model, modelNumber, issue, address, userId, shareFullAddress, shareModelNumber } = req.body;
+    const { category, make, model, modelNumber, issue, address, shareFullAddress, shareModelNumber } = req.body;
 
     // Validate required fields
     if (!category || !make || !model || !issue || !address) {
@@ -118,6 +119,9 @@ app.post('/api/reports', async (req, res) => {
         required: ['category', 'make', 'model', 'issue', 'address']
       });
     }
+
+    // Use authenticated user ID (from Firebase Auth token)
+    const userId = req.user.uid;
 
     const result = await productEventController.createReport({
       category,
@@ -128,7 +132,7 @@ app.post('/api/reports', async (req, res) => {
       address,
       shareFullAddress: shareFullAddress || false,
       shareModelNumber: shareModelNumber || false
-    }, userId || process.env.DEFAULT_USER_ID || 'anonymous');
+    }, userId);
 
     res.status(201).json({
       success: true,
