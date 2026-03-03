@@ -268,19 +268,31 @@
             createUserWithEmailAndPassword
         } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-        // TODO: Replace with your Firebase config
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+        const API_BASE = 'http://localhost:3000';
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+        // Fetch Firebase config from server (keeps credentials in .env, safe to push to GitHub)
+        let app, auth;
+
+        async function initializeFirebase() {
+            try {
+                const response = await fetch(`${API_BASE}/api/firebase-config`);
+                const firebaseConfig = await response.json();
+
+                // Initialize Firebase with config from server
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+
+                console.log('✓ Firebase initialized successfully');
+                return true;
+            } catch (error) {
+                console.error('✗ Failed to initialize Firebase:', error);
+                showMessage('Failed to connect to server. Make sure the server is running.', 'error');
+                return false;
+            }
+        }
+
+        // Initialize Firebase when page loads
+        await initializeFirebase();
 
         let confirmationResult = null;
         let recaptchaVerifier = null;

@@ -13,6 +13,7 @@ import firebaseService from './services/FirebaseService.js';
 import { GeocodingService } from './services/GeocodingService.js';
 import { ProductEventController } from './controllers/ProductEventController.js';
 import { authenticateUser, optionalAuth } from './middleware/authMiddleware.js';
+import configRouter from './routes/config.js';
 
 // Load environment variables
 dotenv.config();
@@ -97,6 +98,9 @@ console.log('✓ Product Event Controller initialized');
 // ============================================================================
 // API Routes
 // ============================================================================
+
+// Config routes (for Firebase config)
+app.use('/api', configRouter);
 
 // Health check
 app.get('/health', (req, res) => {
