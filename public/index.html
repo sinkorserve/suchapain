@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Quality Tracker</title>
+    <title>SuchaPain - Product Quality Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
@@ -14,7 +14,7 @@
         }
 
         body {
-            background: #ffffff;
+            background: #f5f5f5;
             color: #000000;
         }
 
@@ -22,18 +22,37 @@
         .header {
             background: #ffffff;
             border-bottom: 1px solid #e1e1e1;
-            padding: 12px 20px;
+            padding: 16px 24px;
         }
 
         .header-content {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .logo {
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #6001d2 0%, #8b3dff 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .company-name {
             font-size: 24px;
             font-weight: bold;
             color: #6001d2;
@@ -44,234 +63,196 @@
             color: #666;
         }
 
+        .user-info a {
+            color: #6001d2;
+            text-decoration: none;
+        }
+
+        .user-info a:hover {
+            text-decoration: underline;
+        }
+
         /* Container */
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 20px;
         }
 
+        /* 4-Part Grid Layout */
         .main-grid {
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr 2fr;
+            grid-template-rows: auto auto;
             gap: 20px;
         }
 
-        /* Chart Section */
-        .chart-section {
+        .card {
             background: #ffffff;
             border: 1px solid #e1e1e1;
             border-radius: 8px;
             padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        .chart-header {
+        /* Top Left - Top 25 List */
+        .top-list-section {
+            grid-column: 1;
+            grid-row: 1;
+        }
+
+        /* Top Right - Chart */
+        .chart-section {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        /* Bottom Left - Form */
+        .form-section {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        /* Bottom Right - Map */
+        .map-section {
+            grid-column: 2;
+            grid-row: 2;
+        }
+
+        /* Card Headers */
+        .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e1e1e1;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
         }
 
-        .chart-title {
-            font-size: 20px;
+        .card-title {
+            font-size: 18px;
             font-weight: bold;
             color: #000000;
         }
 
-        .chart-subtitle {
-            font-size: 13px;
-            color: #666;
-            margin-top: 4px;
-        }
-
-        .range-selector {
+        /* Top 25 List Styles */
+        .filter-dropdowns {
             display: flex;
             gap: 8px;
         }
 
-        .range-btn {
+        .filter-dropdowns select {
+            padding: 6px 10px;
+            border: 1px solid #e1e1e1;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #ffffff;
+            cursor: pointer;
+        }
+
+        .list-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 8px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .list-item:hover {
+            background: #f9f9f9;
+        }
+
+        .rank-bullet {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .rank-number {
+            font-size: 13px;
+            font-weight: bold;
+            color: #999;
+            width: 25px;
+            text-align: right;
+        }
+
+        .item-name {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+            color: #000;
+        }
+
+        .item-count {
+            font-size: 13px;
+            font-weight: bold;
+            color: #666;
+        }
+
+        /* Chart Styles */
+        .chart-filters {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chart-filters select {
+            padding: 6px 10px;
+            border: 1px solid #e1e1e1;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #ffffff;
+            cursor: pointer;
+        }
+
+        .chart-container {
+            height: 350px;
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .timeline-selector {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .timeline-btn {
             padding: 6px 14px;
             background: #ffffff;
             border: 1px solid #e1e1e1;
             border-radius: 4px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
             color: #000000;
             cursor: pointer;
             transition: all 0.2s;
         }
 
-        .range-btn:hover {
+        .timeline-btn:hover {
             background: #f7f7f7;
         }
 
-        .range-btn.active {
-            background: #0078ff;
+        .timeline-btn.active {
+            background: #6001d2;
             color: #ffffff;
-            border-color: #0078ff;
+            border-color: #6001d2;
         }
 
-        .chart-stats {
-            display: flex;
-            gap: 30px;
-            margin-bottom: 20px;
-            padding: 15px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 4px;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #000000;
-        }
-
-        .stat-change {
-            font-size: 13px;
-            margin-top: 2px;
-        }
-
-        .stat-change.positive {
-            color: #16c784;
-        }
-
-        .stat-change.negative {
-            color: #ea3943;
-        }
-
-        .chart-container {
-            height: 300px;
-            position: relative;
-        }
-
-        /* Top 25 List */
-        .top-list-section {
-            background: #ffffff;
-            border: 1px solid #e1e1e1;
-            border-radius: 8px;
-            padding: 20px;
-            height: fit-content;
-        }
-
-        .list-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #e1e1e1;
-        }
-
-        .list-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: #000000;
-        }
-
-        .view-toggles {
-            display: flex;
-            gap: 4px;
-            background: #f7f7f7;
-            padding: 2px;
-            border-radius: 4px;
-        }
-
-        .toggle-btn {
-            padding: 4px 10px;
-            background: transparent;
-            border: none;
-            font-size: 12px;
-            font-weight: bold;
-            color: #666;
-            cursor: pointer;
-            border-radius: 3px;
-            transition: all 0.2s;
-        }
-
-        .toggle-btn.active {
-            background: #ffffff;
-            color: #000000;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .list-table {
-            width: 100%;
-            font-size: 13px;
-        }
-
-        .list-table thead {
-            border-bottom: 1px solid #e1e1e1;
-        }
-
-        .list-table th {
-            text-align: left;
-            padding: 8px 4px;
-            font-weight: bold;
-            color: #666;
-            font-size: 11px;
-            text-transform: uppercase;
-        }
-
-        .list-table td {
-            padding: 10px 4px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .list-table tbody tr:hover {
-            background: #f7f7f7;
-            cursor: pointer;
-        }
-
-        .rank-cell {
-            color: #666;
-            font-weight: bold;
-            width: 30px;
-        }
-
-        .name-cell {
-            font-weight: bold;
-            color: #000000;
-        }
-
-        .count-cell {
-            text-align: right;
-            font-weight: bold;
-            color: #000000;
-        }
-
-        /* Form Section */
-        .form-section {
-            background: #ffffff;
-            border: 1px solid #e1e1e1;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .form-title {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #000000;
-        }
-
+        /* Form Styles */
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: 1fr;
             gap: 15px;
-            margin-bottom: 15px;
         }
 
         .form-group {
@@ -289,7 +270,7 @@
         .form-group input,
         .form-group select,
         .form-group textarea {
-            padding: 8px 10px;
+            padding: 10px 12px;
             border: 1px solid #e1e1e1;
             border-radius: 4px;
             font-size: 13px;
@@ -300,12 +281,12 @@
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #0078ff;
+            border-color: #6001d2;
         }
 
         .form-group textarea {
             resize: vertical;
-            min-height: 60px;
+            min-height: 80px;
         }
 
         .checkbox-group {
@@ -318,19 +299,20 @@
         }
 
         .submit-btn {
-            padding: 10px 24px;
-            background: #0078ff;
+            padding: 12px 24px;
+            background: #6001d2;
             color: #ffffff;
             border: none;
-            border-radius: 20px;
+            border-radius: 6px;
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
+            margin-top: 10px;
         }
 
         .submit-btn:hover {
-            background: #0066dd;
+            background: #4e01aa;
         }
 
         .submit-btn:disabled {
@@ -354,92 +336,121 @@
         .result-message.error {
             background: #fce8e6;
             color: #c5221f;
-            border: 1px solid #f4c7c3;
+            border: 1px solid #f5c2c1;
+        }
+
+        /* Map Styles */
+        #map {
+            width: 100%;
+            height: 450px;
+            border-radius: 4px;
+            background: #f0f0f0;
         }
 
         /* Loading */
         .loading {
             text-align: center;
             padding: 40px;
-            color: #666;
+            color: #999;
+            font-size: 14px;
         }
 
         /* Responsive */
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto;
+            }
+
+            .top-list-section {
+                grid-column: 1;
+                grid-row: 1;
+            }
+
+            .chart-section {
+                grid-column: 1;
+                grid-row: 2;
+            }
+
+            .form-section {
+                grid-column: 1;
+                grid-row: 3;
+            }
+
+            .map-section {
+                grid-column: 1;
+                grid-row: 4;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+
+            #map {
+                height: 350px;
+            }
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
             }
 
-            .header-content {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
+            .header {
+                padding: 12px 16px;
             }
 
-            .logo {
-                font-size: 20px;
-            }
-
-            .chart-section,
-            .top-list-section,
-            .form-section {
-                padding: 15px;
-            }
-
-            .chart-title {
+            .logo-icon {
+                width: 30px;
+                height: 30px;
                 font-size: 16px;
             }
 
-            .chart-stats {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .stat-value {
+            .company-name {
                 font-size: 20px;
             }
 
-            .range-selector {
-                flex-wrap: wrap;
-                gap: 4px;
+            .card {
+                padding: 15px;
             }
 
-            .range-btn {
-                padding: 4px 10px;
-                font-size: 11px;
+            .card-title {
+                font-size: 16px;
+            }
+
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .filter-dropdowns,
+            .chart-filters {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            .filter-dropdowns select,
+            .chart-filters select {
+                flex: 1;
+                min-width: 100px;
             }
 
             .chart-container {
                 height: 250px;
             }
 
-            .form-grid {
-                grid-template-columns: 1fr;
+            #map {
+                height: 300px;
             }
 
-            .list-title {
-                font-size: 14px;
+            .timeline-selector {
+                flex-wrap: wrap;
             }
 
-            .view-toggles {
+            .timeline-btn {
                 font-size: 11px;
-            }
-
-            .toggle-btn {
-                padding: 3px 8px;
-                font-size: 11px;
-            }
-        }
-
-        @media (min-width: 769px) and (max-width: 1024px) {
-            .form-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (min-width: 1025px) {
-            .main-grid {
-                grid-template-columns: 2fr 1fr;
+                padding: 5px 12px;
             }
         }
     </style>
@@ -447,120 +458,126 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <div class="logo">Product Quality Tracker</div>
+            <div class="logo-section">
+                <div class="logo-icon">SP</div>
+                <div class="company-name">SuchaPain</div>
+            </div>
             <div class="user-info" id="userInfo"></div>
         </div>
     </div>
 
     <div class="container">
         <div class="main-grid">
-            <!-- Chart Section -->
-            <div class="chart-section">
-                <div class="chart-header">
-                    <div>
-                        <div class="chart-title" id="chartTitle">Product Complaints Trend</div>
-                        <div class="chart-subtitle">Total complaints over time</div>
-                    </div>
-                    <div class="range-selector">
-                        <button class="range-btn" onclick="changeRange('1M')">1M</button>
-                        <button class="range-btn" onclick="changeRange('3M')">3M</button>
-                        <button class="range-btn" onclick="changeRange('6M')">6M</button>
-                        <button class="range-btn active" onclick="changeRange('1Y')">1Y</button>
-                        <button class="range-btn" onclick="changeRange('5Y')">5Y</button>
+            <!-- Top Left - Top 25 Brands with Most Issues -->
+            <div class="card top-list-section">
+                <div class="card-header">
+                    <div class="card-title">Top 25 Brands with Most Issues</div>
+                    <div class="filter-dropdowns">
+                        <select id="listFilterType" onchange="updateListFilter()">
+                            <option value="brand">Brand</option>
+                            <option value="brand_model">Brand + Model</option>
+                            <option value="brand_model_serial">Brand + Model + Serial</option>
+                        </select>
                     </div>
                 </div>
-
-                <div class="chart-stats">
-                    <div class="stat-item">
-                        <div class="stat-label">Total Complaints</div>
-                        <div class="stat-value" id="totalComplaints">0</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">This Period</div>
-                        <div class="stat-value" id="periodComplaints">0</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Avg Per Day</div>
-                        <div class="stat-value" id="avgPerDay">0</div>
-                    </div>
-                </div>
-
-                <div class="chart-container">
-                    <canvas id="trendChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Top 25 List -->
-            <div class="top-list-section">
-                <div class="list-header">
-                    <div class="list-title">Top 25 Worst Offenders</div>
-                    <div class="view-toggles">
-                        <button class="toggle-btn active" data-type="brand" onclick="switchListView('brand')">Brands</button>
-                        <button class="toggle-btn" data-type="model" onclick="switchListView('model')">Models</button>
-                        <button class="toggle-btn" data-type="serial" onclick="switchListView('serial')">Serials</button>
-                    </div>
-                </div>
-
-                <div id="topListContainer">
+                <div class="list-container" id="topListContainer">
                     <div class="loading">Loading...</div>
                 </div>
             </div>
-        </div>
 
-        <!-- Report Form -->
-        <div class="form-section">
-            <div class="form-title">Report a Product Issue</div>
-            <form id="reportForm">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Category</label>
-                        <select id="category" required>
-                            <option value="">Select...</option>
-                            <option value="Appliance">Appliance</option>
-                            <option value="Electronics">Electronics</option>
-                            <option value="Furniture">Furniture</option>
-                            <option value="Tools">Tools</option>
-                            <option value="Other">Other</option>
+            <!-- Top Right - Trend Chart -->
+            <div class="card chart-section">
+                <div class="card-header">
+                    <div class="card-title" id="chartTitle">Product Complaints Trend</div>
+                    <div class="chart-filters">
+                        <select id="chartBrandFilter" onchange="updateChartFilters()">
+                            <option value="">All Brands</option>
+                        </select>
+                        <select id="chartModelFilter" onchange="updateChartFilters()">
+                            <option value="">All Models</option>
+                        </select>
+                        <select id="chartSerialFilter" onchange="updateChartFilters()">
+                            <option value="">All Serials</option>
                         </select>
                     </div>
-
-                    <div class="form-group">
-                        <label>Brand</label>
-                        <input type="text" id="make" placeholder="e.g., Samsung" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Model</label>
-                        <input type="text" id="model" placeholder="e.g., RF28R7351SR" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Serial Number (Optional)</label>
-                        <input type="text" id="modelNumber" placeholder="SN123456789">
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="shareModelNumber">
-                            <label>Share publicly</label>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Address</label>
-                        <input type="text" id="address" placeholder="City, State ZIP" required>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="shareAddress">
-                            <label>Share full address</label>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Issue Description</label>
-                        <textarea id="issue" placeholder="Describe the problem..." required></textarea>
-                    </div>
                 </div>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+                <div class="timeline-selector">
+                    <button class="timeline-btn" onclick="changeTimeline('1M')">1M</button>
+                    <button class="timeline-btn" onclick="changeTimeline('3M')">3M</button>
+                    <button class="timeline-btn" onclick="changeTimeline('6M')">6M</button>
+                    <button class="timeline-btn active" onclick="changeTimeline('1Y')">1Y</button>
+                    <button class="timeline-btn" onclick="changeTimeline('5Y')">5Y</button>
+                </div>
+            </div>
 
-                <button type="submit" class="submit-btn">Submit Report</button>
-                <div id="resultMessage"></div>
-            </form>
+            <!-- Bottom Left - Report Form -->
+            <div class="card form-section">
+                <div class="card-header">
+                    <div class="card-title">Report a Product Issue</div>
+                </div>
+                <form id="reportForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Category *</label>
+                            <select id="category" required>
+                                <option value="">Select...</option>
+                                <option value="Appliance">Appliance</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Furniture">Furniture</option>
+                                <option value="Tools">Tools</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Brand *</label>
+                            <input type="text" id="make" placeholder="e.g., Samsung" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Model *</label>
+                            <input type="text" id="model" placeholder="e.g., RF28R7351SR" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Serial Number (Optional)</label>
+                            <input type="text" id="modelNumber" placeholder="SN123456789">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="shareModelNumber">
+                                <label>Share publicly</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Address *</label>
+                            <input type="text" id="address" placeholder="City, State ZIP" required>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="shareAddress">
+                                <label>Share full address</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Issue Description *</label>
+                            <textarea id="issue" placeholder="Describe the problem..." required></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Submit Report</button>
+                    <div id="resultMessage"></div>
+                </form>
+            </div>
+
+            <!-- Bottom Right - Map -->
+            <div class="card map-section">
+                <div class="card-header">
+                    <div class="card-title">Reports by Location (ZIP Code)</div>
+                </div>
+                <div id="map"></div>
+            </div>
         </div>
     </div>
 
@@ -573,9 +590,9 @@
         // Update user info display
         const userInfoEl = document.getElementById('userInfo');
         if (token) {
-            userInfoEl.innerHTML = `${userEmail || userPhone || 'User'} | <a href="#" onclick="logout()" style="color: #0078ff; text-decoration: none;">Logout</a>`;
+            userInfoEl.innerHTML = `${userEmail || userPhone || 'User'} | <a href="#" onclick="logout()">Logout</a>`;
         } else {
-            userInfoEl.innerHTML = `<a href="/auth.html" style="color: #0078ff; text-decoration: none;">Sign In</a>`;
+            userInfoEl.innerHTML = `<a href="/auth.html">Sign In</a>`;
         }
 
         function logout() {
@@ -586,23 +603,164 @@
         }
 
         let trendChart;
-        let currentRange = '1Y';
-        let currentListView = 'brand';
-        let selectedBrand = null;
-        let selectedModel = null;
+        let currentTimeline = '1Y';
+        let allReports = [];
+        let googleMapsLoaded = false;
+        let map;
+
+        // Color gradient from red to green
+        function getGradientColor(rank, total) {
+            const ratio = (rank - 1) / (total - 1);
+            const r = Math.round(220 - (ratio * 120)); // 220 (red) to 100 (green)
+            const g = Math.round(53 + (ratio * 167)); // 53 (red) to 220 (green)
+            const b = 47; // Keep constant
+            return `rgb(${r}, ${g}, ${b})`;
+        }
 
         // Initialize
         async function init() {
-            await loadTimeSeriesData('1Y');
-            await loadTopList('brand');
+            await loadAllReports();
+            await loadChartData('1Y');
+            populateChartFilters();
+            initializeMap();
         }
 
-        // Load time series data
-        async function loadTimeSeriesData(range, brand = null, model = null) {
+        // Load all reports from database
+        async function loadAllReports() {
+            try {
+                const headers = {};
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const response = await fetch(`${API_BASE}/api/reports`, { headers });
+                if (!response.ok) throw new Error('Failed to load reports');
+
+                const data = await response.json();
+                allReports = data.reports || [];
+
+                // Display initial list (by brand)
+                updateListDisplay('brand');
+            } catch (error) {
+                console.error('Error loading reports:', error);
+                document.getElementById('topListContainer').innerHTML = '<div class="loading">No data available</div>';
+            }
+        }
+
+        // Update list display based on filter
+        function updateListFilter() {
+            const filterType = document.getElementById('listFilterType').value;
+            updateListDisplay(filterType);
+        }
+
+        function updateListDisplay(filterType) {
+            if (!allReports || allReports.length === 0) {
+                document.getElementById('topListContainer').innerHTML = '<div class="loading">No data yet</div>';
+                return;
+            }
+
+            const aggregated = {};
+
+            allReports.forEach(report => {
+                let key;
+                let displayName;
+
+                if (filterType === 'brand') {
+                    key = report.make || 'Unknown';
+                    displayName = key;
+                } else if (filterType === 'brand_model') {
+                    key = `${report.make || 'Unknown'}_${report.model || 'Unknown'}`;
+                    displayName = `${report.make || 'Unknown'} ${report.model || 'Unknown'}`;
+                } else { // brand_model_serial
+                    const serial = report.publicView?.modelNumber || report.modelNumber || 'No Serial';
+                    key = `${report.make || 'Unknown'}_${report.model || 'Unknown'}_${serial}`;
+                    displayName = `${report.make || 'Unknown'} ${report.model || 'Unknown'} (${serial})`;
+                }
+
+                if (!aggregated[key]) {
+                    aggregated[key] = {
+                        name: displayName,
+                        count: 0
+                    };
+                }
+                aggregated[key].count++;
+            });
+
+            // Convert to array and sort
+            const sorted = Object.values(aggregated)
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 25);
+
+            // Display list
+            const listHTML = sorted.map((item, index) => {
+                const rank = index + 1;
+                const color = getGradientColor(rank, sorted.length);
+
+                return `
+                    <div class="list-item" onclick="selectListItem('${item.name.replace(/'/g, "\\'")}')">
+                        <div class="rank-bullet" style="background-color: ${color};"></div>
+                        <div class="rank-number">${rank}</div>
+                        <div class="item-name">${item.name}</div>
+                        <div class="item-count">${item.count}</div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('topListContainer').innerHTML = listHTML || '<div class="loading">No data yet</div>';
+        }
+
+        function selectListItem(name) {
+            console.log('Selected:', name);
+            // Could update chart based on selection
+        }
+
+        // Populate chart filter dropdowns
+        function populateChartFilters() {
+            if (!allReports || allReports.length === 0) return;
+
+            const brands = new Set();
+            const models = new Set();
+            const serials = new Set();
+
+            allReports.forEach(report => {
+                if (report.make) brands.add(report.make);
+                if (report.model) models.add(report.model);
+                const serial = report.publicView?.modelNumber || report.modelNumber;
+                if (serial) serials.add(serial);
+            });
+
+            // Populate brand dropdown
+            const brandSelect = document.getElementById('chartBrandFilter');
+            brandSelect.innerHTML = '<option value="">All Brands</option>' +
+                Array.from(brands).sort().map(b => `<option value="${b}">${b}</option>`).join('');
+
+            // Populate model dropdown
+            const modelSelect = document.getElementById('chartModelFilter');
+            modelSelect.innerHTML = '<option value="">All Models</option>' +
+                Array.from(models).sort().map(m => `<option value="${m}">${m}</option>`).join('');
+
+            // Populate serial dropdown
+            const serialSelect = document.getElementById('chartSerialFilter');
+            serialSelect.innerHTML = '<option value="">All Serials</option>' +
+                Array.from(serials).sort().map(s => `<option value="${s}">${s}</option>`).join('');
+        }
+
+        // Update chart based on filters
+        function updateChartFilters() {
+            const brand = document.getElementById('chartBrandFilter').value;
+            const model = document.getElementById('chartModelFilter').value;
+            const serial = document.getElementById('chartSerialFilter').value;
+
+            loadChartData(currentTimeline, brand, model, serial);
+        }
+
+        // Load chart data
+        async function loadChartData(range, brand = null, model = null, serial = null) {
             try {
                 let url = `${API_BASE}/api/reports/timeseries?range=${range}`;
                 if (brand) url += `&brand=${encodeURIComponent(brand)}`;
                 if (model) url += `&model=${encodeURIComponent(model)}`;
+                if (serial) url += `&serial=${encodeURIComponent(serial)}`;
 
                 const headers = {};
                 if (token) {
@@ -611,14 +769,14 @@
 
                 const response = await fetch(url, { headers });
                 const data = await response.json();
-                displayChart(data.data, range);
+                displayChart(data.data || []);
             } catch (error) {
-                console.error('Error loading time series:', error);
+                console.error('Error loading chart data:', error);
             }
         }
 
         // Display chart
-        function displayChart(data, range) {
+        function displayChart(data) {
             const ctx = document.getElementById('trendChart').getContext('2d');
 
             if (trendChart) {
@@ -627,12 +785,6 @@
 
             const labels = data.map(d => d.date);
             const counts = data.map(d => d.count);
-            const totalComplaints = counts.reduce((sum, c) => sum + c, 0);
-            const avgPerDay = (totalComplaints / data.length).toFixed(1);
-
-            document.getElementById('totalComplaints').textContent = totalComplaints.toLocaleString();
-            document.getElementById('periodComplaints').textContent = totalComplaints.toLocaleString();
-            document.getElementById('avgPerDay').textContent = avgPerDay;
 
             trendChart = new Chart(ctx, {
                 type: 'line',
@@ -641,14 +793,13 @@
                     datasets: [{
                         label: 'Complaints',
                         data: counts,
-                        borderColor: '#0078ff',
-                        backgroundColor: 'rgba(0, 120, 255, 0.1)',
+                        borderColor: '#6001d2',
+                        backgroundColor: 'rgba(96, 1, 210, 0.1)',
                         borderWidth: 2,
                         fill: true,
-                        tension: 0,
-                        pointRadius: 0,
-                        pointHoverRadius: 5,
-                        pointHoverBackgroundColor: '#0078ff'
+                        tension: 0.3,
+                        pointRadius: 2,
+                        pointHoverRadius: 5
                     }]
                 },
                 options: {
@@ -657,133 +808,102 @@
                     plugins: {
                         legend: {
                             display: false
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            callbacks: {
-                                title: function(items) {
-                                    return new Date(items[0].label).toLocaleDateString();
-                                }
-                            }
                         }
                     },
                     scales: {
-                        x: {
-                            display: true,
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                maxTicksLimit: 8,
-                                font: {
-                                    size: 11,
-                                    family: 'Arial'
-                                }
-                            }
-                        },
                         y: {
-                            display: true,
                             beginAtZero: true,
-                            grid: {
-                                color: '#f0f0f0'
-                            },
                             ticks: {
-                                font: {
-                                    size: 11,
-                                    family: 'Arial'
-                                }
+                                precision: 0
                             }
                         }
-                    },
-                    interaction: {
-                        mode: 'nearest',
-                        axis: 'x',
-                        intersect: false
                     }
                 }
             });
         }
 
-        // Load top list
-        async function loadTopList(type) {
+        // Change timeline
+        function changeTimeline(range) {
+            currentTimeline = range;
+
+            // Update active button
+            document.querySelectorAll('.timeline-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            updateChartFilters();
+        }
+
+        // Initialize Google Map
+        async function initializeMap() {
+            try {
+                // Load Google Maps API
+                const response = await fetch(`${API_BASE}/api/config/google-maps-key`);
+                const config = await response.json();
+
+                if (!window.google) {
+                    const script = document.createElement('script');
+                    script.src = `https://maps.googleapis.com/maps/api/js?key=${config.apiKey}&libraries=places`;
+                    script.async = true;
+                    script.defer = true;
+                    script.onload = () => {
+                        googleMapsLoaded = true;
+                        renderMap();
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    googleMapsLoaded = true;
+                    renderMap();
+                }
+            } catch (error) {
+                console.error('Error loading Google Maps:', error);
+                document.getElementById('map').innerHTML = '<div class="loading">Map unavailable</div>';
+            }
+        }
+
+        async function renderMap() {
             try {
                 const headers = {};
                 if (token) {
                     headers['Authorization'] = `Bearer ${token}`;
                 }
 
-                const response = await fetch(`${API_BASE}/api/reports/rankings?type=${type}&limit=25`, { headers });
+                const response = await fetch(`${API_BASE}/api/reports/by-zipcode`, { headers });
                 const data = await response.json();
-                displayTopList(data.data, type);
+                const zipData = data.zipCodes || [];
+
+                // Initialize map centered on US
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: { lat: 37.0902, lng: -95.7129 },
+                    zoom: 4
+                });
+
+                // Add markers for each ZIP code
+                zipData.forEach(zip => {
+                    if (zip.lat && zip.lng) {
+                        const marker = new google.maps.Marker({
+                            position: { lat: zip.lat, lng: zip.lng },
+                            map: map,
+                            title: `${zip.zipCode}: ${zip.count} report(s)`
+                        });
+
+                        const infoWindow = new google.maps.InfoWindow({
+                            content: `
+                                <div style="padding: 10px;">
+                                    <h3 style="margin: 0 0 10px 0;">ZIP: ${zip.zipCode}</h3>
+                                    <p style="margin: 0;"><strong>${zip.count}</strong> report(s)</p>
+                                </div>
+                            `
+                        });
+
+                        marker.addListener('click', () => {
+                            infoWindow.open(map, marker);
+                        });
+                    }
+                });
             } catch (error) {
-                console.error('Error loading top list:', error);
-                document.getElementById('topListContainer').innerHTML = '<div class="loading">No data available</div>';
-            }
-        }
-
-        // Display top list
-        function displayTopList(rankings, type) {
-            if (!rankings || rankings.length === 0) {
-                document.getElementById('topListContainer').innerHTML = '<div class="loading">No data yet</div>';
-                return;
-            }
-
-            const rows = rankings.map((item, index) => `
-                <tr onclick="selectItem('${type}', '${item.name.replace(/'/g, "\\'")}')">
-                    <td class="rank-cell">${index + 1}</td>
-                    <td class="name-cell">${item.name}</td>
-                    <td class="count-cell">${item.count}</td>
-                </tr>
-            `).join('');
-
-            const html = `
-                <table class="list-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Name</th>
-                            <th style="text-align: right;">Reports</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rows}
-                    </tbody>
-                </table>
-            `;
-
-            document.getElementById('topListContainer').innerHTML = html;
-        }
-
-        // Change range
-        function changeRange(range) {
-            currentRange = range;
-            document.querySelectorAll('.range-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.textContent === range);
-            });
-            loadTimeSeriesData(range, selectedBrand, selectedModel);
-        }
-
-        // Switch list view
-        function switchListView(type) {
-            currentListView = type;
-            document.querySelectorAll('.toggle-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.type === type);
-            });
-            loadTopList(type);
-        }
-
-        // Select item to filter chart
-        function selectItem(type, name) {
-            if (type === 'brand') {
-                selectedBrand = name;
-                selectedModel = null;
-                document.getElementById('chartTitle').textContent = `${name} - Complaints Trend`;
-                loadTimeSeriesData(currentRange, name);
-            } else if (type === 'model') {
-                selectedModel = name;
-                document.getElementById('chartTitle').textContent = `${name} - Complaints Trend`;
-                loadTimeSeriesData(currentRange, null, name);
+                console.error('Error rendering map:', error);
             }
         }
 
@@ -808,16 +928,12 @@
                 category: document.getElementById('category').value,
                 make: document.getElementById('make').value,
                 model: document.getElementById('model').value,
-                modelNumber: document.getElementById('modelNumber').value || undefined,
-                issue: document.getElementById('issue').value,
+                modelNumber: document.getElementById('modelNumber').value || null,
+                shareModelNumber: document.getElementById('shareModelNumber').checked,
                 address: document.getElementById('address').value,
-                shareFullAddress: document.getElementById('shareAddress').checked,
-                shareModelNumber: document.getElementById('shareModelNumber').checked
+                shareAddress: document.getElementById('shareAddress').checked,
+                issue: document.getElementById('issue').value
             };
-
-            Object.keys(formData).forEach(key => {
-                if (formData[key] === undefined) delete formData[key];
-            });
 
             try {
                 const response = await fetch(`${API_BASE}/api/reports`, {
@@ -832,26 +948,25 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    resultEl.className = 'result-message success';
-                    resultEl.textContent = 'Report submitted successfully! Chart will update shortly.';
+                    resultEl.innerHTML = '<div class="result-message success">Report submitted successfully!</div>';
                     e.target.reset();
 
-                    setTimeout(() => {
-                        loadTimeSeriesData(currentRange, selectedBrand, selectedModel);
-                        loadTopList(currentListView);
-                    }, 2000);
+                    // Reload data
+                    await loadAllReports();
+                    await loadChartData(currentTimeline);
+                    if (googleMapsLoaded) renderMap();
                 } else {
-                    throw new Error(data.message || 'Failed to submit');
+                    resultEl.innerHTML = `<div class="result-message error">Error: ${data.error || 'Failed to submit report'}</div>`;
                 }
             } catch (error) {
-                resultEl.className = 'result-message error';
-                resultEl.textContent = `Error: ${error.message}`;
+                resultEl.innerHTML = `<div class="result-message error">Error: ${error.message}</div>`;
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Submit Report';
             }
         });
 
+        // Initialize on load
         init();
     </script>
 </body>
