@@ -101,6 +101,34 @@ export class ProductEventController {
   }
 
   /**
+   * Get all reports for map view
+   * @param {string} requesterId - User making the request (optional)
+   * @returns {Promise<Array>} List of reports with location data for map markers
+   */
+  async getAllReportsForMap(requesterId = null) {
+    const events = await firebaseService.queryProductEvents({});
+
+    return events.map(event => {
+      const publicView = event.getPublicView(requesterId);
+      return {
+        id: event.id,
+        category: publicView.category,
+        make: publicView.make,
+        model: publicView.model,
+        issue: publicView.issue,
+        location: publicView.location, // { lat, lng }
+        displayLocation: publicView.displayLocation,
+        zipCode: publicView.zipCode,
+        nearestIntersection: publicView.nearestIntersection,
+        createdAt: publicView.createdAt,
+        // Only include if user has permission
+        address: publicView.address,
+        modelNumber: publicView.modelNumber
+      };
+    });
+  }
+
+  /**
    * Request permission to view private data
    * @param {string} reportId - Report ID
    * @param {string} requesterId - User requesting permission

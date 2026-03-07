@@ -21,4 +21,11 @@ router.get('/firebase-config', (req, res) => {
     res.json(config);
 });
 
+router.get('/google-maps-key', (req, res) => {
+    // Google Maps API key for frontend use
+    res.json({
+        apiKey: process.env.GOOGLE_MAPS_API_KEY
+    });
+});
+
 export default router;

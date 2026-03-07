@@ -177,6 +177,26 @@ app.get('/api/reports/:id', async (req, res) => {
   }
 });
 
+// Get all reports for map view (optional authentication)
+app.get('/api/reports/map/all', optionalAuth, async (req, res) => {
+  try {
+    const requesterId = req.user ? req.user.uid : null;
+    const reports = await productEventController.getAllReportsForMap(requesterId);
+
+    res.json({
+      success: true,
+      count: reports.length,
+      data: reports
+    });
+  } catch (error) {
+    console.error('Error fetching reports for map:', error);
+    res.status(500).json({
+      error: 'Failed to fetch reports',
+      message: error.message
+    });
+  }
+});
+
 // Query reports with filters
 app.get('/api/reports', async (req, res) => {
   try {

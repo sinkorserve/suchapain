@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Reports Map - Product CRM Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .nav-button:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .controls {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .filter-group select {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .stats {
+            margin-left: auto;
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        #map {
+            width: 100%;
+            height: calc(100vh - 140px);
+        }
+
+        .info-window {
+            max-width: 300px;
+            padding: 10px;
+        }
+
+        .info-window h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .info-item {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .info-value {
+            color: #666;
+        }
+
+        .issue-text {
+            background: #f5f5f5;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #555;
+            font-style: italic;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 6px;
+            border-left: 4px solid #c33;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📍 Product Reports Map</h1>
+        <div class="nav-buttons">
+            <a href="/" class="nav-button">Create Report</a>
+            <button class="nav-button" onclick="signOut()" id="signOutBtn" style="display: none;">Sign Out</button>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="filter-group">
+            <label for="categoryFilter">Category:</label>
+            <select id="categoryFilter" onchange="filterMarkers()">
+                <option value="">All Categories</option>
+                <option value="Appliance">Appliance</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Furniture">Furniture</option>
+                <option value="Tools">Tools</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="makeFilter">Make/Brand:</label>
+            <select id="makeFilter" onchange="filterMarkers()">
+                <option value="">All Brands</option>
+            </select>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <span>Total Reports:</span>
+                <span class="stat-value" id="totalCount">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Visible:</span>
+                <span class="stat-value" id="visibleCount">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading" class="loading">
+        <div class="loading-spinner"></div>
+        <p>Loading map data...</p>
+    </div>
+
+    <div id="map"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        let map;
+        let markers = [];
+        let allReports = [];
+        let infoWindow;
+
+        // Check if user is signed in
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            document.getElementById('signOutBtn').style.display = 'block';
+        }
+
+        function signOut() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userPhone');
+            window.location.href = '/auth.html';
+        }
+
+        // Initialize map
+        async function initMap() {
+            // Default center (San Francisco)
+            const center = { lat: 37.7749, lng: -122.4194 };
+
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 4,
+                center: center,
+                mapTypeControl: true,
+                streetViewControl: true,
+                fullscreenControl: true,
+                zoomControl: true
+            });
+
+            infoWindow = new google.maps.InfoWindow();
+
+            // Load reports and create markers
+            await loadReports();
+        }
+
+        // Load all reports from API
+        async function loadReports() {
+            try {
+                const headers = {};
+                const token = localStorage.getItem('authToken');
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const response = await fetch(`${API_BASE}/api/reports/map/all`, {
+                    headers: headers
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load reports');
+                }
+
+                const data = await response.json();
+                allReports = data.data || [];
+
+                document.getElementById('totalCount').textContent = allReports.length;
+                document.getElementById('loading').style.display = 'none';
+
+                if (allReports.length === 0) {
+                    alert('No reports found. Create your first report!');
+                    return;
+                }
+
+                // Populate brand filter
+                populateBrandFilter();
+
+                // Create markers for all reports
+                createMarkers();
+
+                // Fit map to show all markers
+                fitMapToMarkers();
+
+            } catch (error) {
+                console.error('Error loading reports:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.body.insertAdjacentHTML('beforeend', `
+                    <div class="error-message">
+                        <strong>Error loading reports:</strong> ${error.message}
+                        <br><br>
+                        Make sure the server is running and you have reports in the database.
+                    </div>
+                `);
+            }
+        }
+
+        // Populate brand filter with unique brands
+        function populateBrandFilter() {
+            const brands = [...new Set(allReports.map(r => r.make))].sort();
+            const select = document.getElementById('makeFilter');
+
+            brands.forEach(brand => {
+                const option = document.createElement('option');
+                option.value = brand;
+                option.textContent = brand;
+                select.appendChild(option);
+            });
+        }
+
+        // Create markers for all reports
+        function createMarkers() {
+            // Clear existing markers
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+
+            allReports.forEach(report => {
+                if (!report.location || !report.location.lat || !report.location.lng) {
+                    console.warn('Report missing location:', report.id);
+                    return;
+                }
+
+                const marker = new google.maps.Marker({
+                    position: { lat: report.location.lat, lng: report.location.lng },
+                    map: map,
+                    title: `${report.make} ${report.model}`,
+                    icon: getMarkerIcon(report.category),
+                    reportData: report
+                });
+
+                marker.addListener('click', () => {
+                    showInfoWindow(marker, report);
+                });
+
+                markers.push(marker);
+            });
+
+            updateVisibleCount();
+        }
+
+        // Get marker icon color based on category
+        function getMarkerIcon(category) {
+            const colors = {
+                'Appliance': '#FF6B6B',
+                'Electronics': '#4ECDC4',
+                'Furniture': '#95E1D3',
+                'Tools': '#FFE66D',
+                'Other': '#999999'
+            };
+
+            const color = colors[category] || colors['Other'];
+
+            return {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: color,
+                fillOpacity: 0.8,
+                strokeColor: '#FFFFFF',
+                strokeWeight: 2
+            };
+        }
+
+        // Show info window for a marker
+        function showInfoWindow(marker, report) {
+            const content = `
+                <div class="info-window">
+                    <h3>${report.category}: ${report.make} ${report.model}</h3>
+                    <div class="info-item">
+                        <span class="info-label">Location:</span>
+                        <span class="info-value">${report.displayLocation || report.nearestIntersection || report.zipCode}</span>
+                    </div>
+                    ${report.modelNumber ? `
+                    <div class="info-item">
+                        <span class="info-label">Serial Number:</span>
+                        <span class="info-value">${report.modelNumber}</span>
+                    </div>
+                    ` : ''}
+                    <div class="info-item">
+                        <span class="info-label">Reported:</span>
+                        <span class="info-value">${new Date(report.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <div class="issue-text">
+                        "${report.issue}"
+                    </div>
+                </div>
+            `;
+
+            infoWindow.setContent(content);
+            infoWindow.open(map, marker);
+        }
+
+        // Filter markers based on selected filters
+        function filterMarkers() {
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const makeFilter = document.getElementById('makeFilter').value;
+
+            markers.forEach(marker => {
+                const report = marker.reportData;
+                let visible = true;
+
+                if (categoryFilter && report.category !== categoryFilter) {
+                    visible = false;
+                }
+
+                if (makeFilter && report.make !== makeFilter) {
+                    visible = false;
+                }
+
+                marker.setVisible(visible);
+            });
+
+            updateVisibleCount();
+        }
+
+        // Update visible count
+        function updateVisibleCount() {
+            const visibleCount = markers.filter(m => m.getVisible()).length;
+            document.getElementById('visibleCount').textContent = visibleCount;
+        }
+
+        // Fit map to show all visible markers
+        function fitMapToMarkers() {
+            const bounds = new google.maps.LatLngBounds();
+            let hasVisibleMarkers = false;
+
+            markers.forEach(marker => {
+                if (marker.getVisible()) {
+                    bounds.extend(marker.getPosition());
+                    hasVisibleMarkers = true;
+                }
+            });
+
+            if (hasVisibleMarkers) {
+                map.fitBounds(bounds);
+
+                // Prevent zooming in too much for single marker
+                google.maps.event.addListenerOnce(map, 'bounds_changed', () => {
+                    if (map.getZoom() > 15) {
+                        map.setZoom(15);
+                    }
+                });
+            }
+        }
+
+        // Initialize map when Google Maps loads
+        window.initMap = initMap;
+
+        // Load Google Maps API dynamically with API key from server
+        async function loadGoogleMaps() {
+            try {
+                const response = await fetch(`${API_BASE}/api/google-maps-key`);
+                const data = await response.json();
+                const apiKey = data.apiKey;
+
+                const script = document.createElement('script');
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap&libraries=places`;
+                script.async = true;
+                script.defer = true;
+                document.head.appendChild(script);
+            } catch (error) {
+                console.error('Error loading Google Maps API:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.body.insertAdjacentHTML('beforeend', `
+                    <div class="error-message">
+                        <strong>Error loading Google Maps:</strong> ${error.message}
+                        <br><br>
+                        Make sure the server is running and GOOGLE_MAPS_API_KEY is set in .env
+                    </div>
+                `);
+            }
+        }
+
+        // Load Google Maps when page loads
+        loadGoogleMaps();
+    </script>
+</body>
+</html>
