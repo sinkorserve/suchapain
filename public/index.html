@@ -53,7 +53,7 @@
 
         .main-grid {
             display: grid;
-            grid-template-columns: 900px 1fr;
+            grid-template-columns: 1fr;
             gap: 20px;
         }
 
@@ -152,7 +152,7 @@
         }
 
         .chart-container {
-            height: 400px;
+            height: 300px;
             position: relative;
         }
 
@@ -365,13 +365,81 @@
         }
 
         /* Responsive */
-        @media (max-width: 1200px) {
-            .main-grid {
-                grid-template-columns: 1fr;
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .logo {
+                font-size: 20px;
+            }
+
+            .chart-section,
+            .top-list-section,
+            .form-section {
+                padding: 15px;
+            }
+
+            .chart-title {
+                font-size: 16px;
+            }
+
+            .chart-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+
+            .range-selector {
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+
+            .range-btn {
+                padding: 4px 10px;
+                font-size: 11px;
+            }
+
+            .chart-container {
+                height: 250px;
             }
 
             .form-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .list-title {
+                font-size: 14px;
+            }
+
+            .view-toggles {
+                font-size: 11px;
+            }
+
+            .toggle-btn {
+                padding: 3px 8px;
+                font-size: 11px;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1025px) {
+            .main-grid {
+                grid-template-columns: 2fr 1fr;
             }
         }
     </style>
@@ -502,11 +570,20 @@
         const userEmail = localStorage.getItem('userEmail');
         const userPhone = localStorage.getItem('userPhone');
 
-        if (!token) {
-            window.location.href = '/auth.html';
+        // Update user info display
+        const userInfoEl = document.getElementById('userInfo');
+        if (token) {
+            userInfoEl.innerHTML = `${userEmail || userPhone || 'User'} | <a href="#" onclick="logout()" style="color: #0078ff; text-decoration: none;">Logout</a>`;
+        } else {
+            userInfoEl.innerHTML = `<a href="/auth.html" style="color: #0078ff; text-decoration: none;">Sign In</a>`;
         }
 
-        document.getElementById('userInfo').textContent = userEmail || userPhone || 'User';
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userPhone');
+            window.location.reload();
+        }
 
         let trendChart;
         let currentRange = '1Y';
@@ -527,10 +604,12 @@
                 if (brand) url += `&brand=${encodeURIComponent(brand)}`;
                 if (model) url += `&model=${encodeURIComponent(model)}`;
 
-                const response = await fetch(url, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const headers = {};
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
 
+                const response = await fetch(url, { headers });
                 const data = await response.json();
                 displayChart(data.data, range);
             } catch (error) {
@@ -629,14 +708,17 @@
         // Load top list
         async function loadTopList(type) {
             try {
-                const response = await fetch(`${API_BASE}/api/reports/rankings?type=${type}&limit=25`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const headers = {};
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
 
+                const response = await fetch(`${API_BASE}/api/reports/rankings?type=${type}&limit=25`, { headers });
                 const data = await response.json();
                 displayTopList(data.data, type);
             } catch (error) {
                 console.error('Error loading top list:', error);
+                document.getElementById('topListContainer').innerHTML = '<div class="loading">No data available</div>';
             }
         }
 
@@ -711,6 +793,12 @@
 
             const resultEl = document.getElementById('resultMessage');
             const submitBtn = e.target.querySelector('.submit-btn');
+
+            // Require authentication for submitting
+            if (!token) {
+                resultEl.innerHTML = '<div class="result-message error">Please <a href="/auth.html">sign in</a> to submit a report</div>';
+                return;
+            }
 
             submitBtn.disabled = true;
             submitBtn.textContent = 'Submitting...';
