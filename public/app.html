@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Quality Tracker - Report & See Worst Offenders</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-card: #151515;
+            --bg-input: #1f1f1f;
+            --primary: #ff3d00;
+            --primary-glow: rgba(255, 61, 0, 0.5);
+            --secondary: #00e5ff;
+            --accent: #ffd600;
+            --text-primary: #ffffff;
+            --text-secondary: #999;
+            --border: #2a2a2a;
+            --success: #00e676;
+            --error: #ff1744;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, #d84315 100%);
+            padding: 20px 40px;
+            box-shadow: 0 8px 32px var(--primary-glow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .user-badge {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: 450px 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        /* Left Panel - Form + Map */
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid var(--border);
+        }
+
+        .form-card h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .checkbox-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary), #d84315);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px var(--primary-glow);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--primary-glow);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .result.success {
+            background: rgba(0, 230, 118, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .result.error {
+            background: rgba(255, 23, 68, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+
+        /* Map Card */
+        .map-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .map-header {
+            padding: 15px 20px;
+            background: var(--bg-input);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .map-header h3 {
+            font-size: 14px;
+            color: var(--secondary);
+            font-weight: 600;
+        }
+
+        .zip-badge {
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            color: var(--bg-dark);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        #map {
+            height: 250px;
+            width: 100%;
+        }
+
+        /* Billboard - Top Offenders */
+        .billboard {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid var(--border);
+        }
+
+        .billboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .billboard-title {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .view-toggles {
+            display: flex;
+            gap: 10px;
+            background: var(--bg-input);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .view-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Rankings List */
+        .rankings {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .rank-item {
+            background: var(--bg-input);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border: 2px solid var(--border);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rank-item:hover {
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .rank-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+        }
+
+        .rank-number {
+            font-size: 32px;
+            font-weight: 800;
+            min-width: 50px;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .rank-number.top3 {
+            font-size: 42px;
+        }
+
+        .rank-details {
+            flex: 1;
+        }
+
+        .rank-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .rank-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .rank-count {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--primary);
+            text-align: right;
+            min-width: 80px;
+        }
+
+        .rank-count-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .categories-pills {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .category-pill {
+            background: rgba(255, 61, 0, 0.15);
+            color: var(--primary);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .billboard-title {
+                font-size: 24px;
+            }
+
+            .rank-number {
+                font-size: 24px;
+                min-width: 40px;
+            }
+
+            .rank-count {
+                font-size: 28px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+            }
+
+            .logo {
+                font-size: 20px;
+            }
+
+            .container {
+                padding: 20px 15px;
+            }
+
+            .billboard-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .rank-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .rank-count {
+                align-self: flex-end;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">🔍 Product Quality Tracker</div>
+            <div class="user-badge" id="userBadge"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="app-grid">
+            <!-- Left Panel: Form + Map -->
+            <div class="left-panel">
+                <!-- Report Form -->
+                <div class="form-card">
+                    <h2>Report an Issue</h2>
+                    <form id="reportForm">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="category" required>
+                                <option value="">Select...</option>
+                                <option value="Appliance">Appliance</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Furniture">Furniture</option>
+                                <option value="Tools">Tools</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Brand</label>
+                            <input type="text" id="make" placeholder="e.g., Samsung" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Model</label>
+                            <input type="text" id="model" placeholder="e.g., RF28R7351SR" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Serial Number (Optional)</label>
+                            <input type="text" id="modelNumber" placeholder="SN123456789">
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="shareModelNumber">
+                                <label>Make public</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Issue Description</label>
+                            <textarea id="issue" placeholder="Describe the problem..." required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Address</label>
+                            <input type="text" id="address" placeholder="123 Main St, City, State ZIP" required>
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="shareAddress">
+                                <label>Share full address</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="submit-btn">Submit Report</button>
+                    </form>
+                    <div id="result"></div>
+                </div>
+
+                <!-- Map Card -->
+                <div class="map-card">
+                    <div class="map-header">
+                        <h3>📍 Your Location</h3>
+                        <div class="zip-badge" id="userZipBadge">Loading...</div>
+                    </div>
+                    <div id="map"></div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Billboard Rankings -->
+            <div class="billboard">
+                <div class="billboard-header">
+                    <div class="billboard-title">🏆 Top 25 Worst Offenders</div>
+                    <div class="view-toggles">
+                        <button class="view-btn active" data-type="brand" onclick="switchView('brand')">Brands</button>
+                        <button class="view-btn" data-type="model" onclick="switchView('model')">Models</button>
+                        <button class="view-btn" data-type="serial" onclick="switchView('serial')">Serials</button>
+                    </div>
+                </div>
+
+                <div id="rankingsContainer">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <div>Loading rankings...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        const token = localStorage.getItem('authToken');
+        const userEmail = localStorage.getItem('userEmail');
+        const userPhone = localStorage.getItem('userPhone');
+
+        if (!token) {
+            window.location.href = '/auth.html';
+        }
+
+        document.getElementById('userBadge').textContent = userEmail || userPhone || 'User';
+
+        let map, userMarker;
+        let currentView = 'brand';
+        let userLocation = null;
+
+        // Initialize
+        async function init() {
+            await getUserLocation();
+            await loadGoogleMaps();
+            await loadRankings('brand');
+        }
+
+        // Get user location from IP
+        async function getUserLocation() {
+            try {
+                const response = await fetch(`${API_BASE}/api/location/ip`);
+                const data = await response.json();
+                userLocation = data;
+                document.getElementById('userZipBadge').textContent = `ZIP ${data.zipCode}`;
+            } catch (error) {
+                console.error('Error getting location:', error);
+                document.getElementById('userZipBadge').textContent = 'Unknown';
+            }
+        }
+
+        // Initialize map
+        async function initMap() {
+            const center = userLocation?.location || { lat: 37.7749, lng: -122.4194 };
+
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 13,
+                center: center,
+                disableDefaultUI: true,
+                zoomControl: true,
+                styles: [
+                    { elementType: 'geometry', stylers: [{ color: '#1a1a1a' }] },
+                    { elementType: 'labels.text.stroke', stylers: [{ color: '#0a0a0a' }] },
+                    { elementType: 'labels.text.fill', stylers: [{ color: '#808080' }] },
+                    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#000000' }] },
+                    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2c2c2c' }] }
+                ]
+            });
+
+            userMarker = new google.maps.Marker({
+                position: center,
+                map: map,
+                title: `Your location: ZIP ${userLocation?.zipCode}`,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 10,
+                    fillColor: '#00e5ff',
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 2
+                }
+            });
+        }
+
+        // Load Google Maps
+        async function loadGoogleMaps() {
+            const response = await fetch(`${API_BASE}/api/google-maps-key`);
+            const data = await response.json();
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${data.apiKey}&callback=initMap`;
+            script.async = true;
+            document.head.appendChild(script);
+        }
+
+        window.initMap = initMap;
+
+        // Load rankings
+        async function loadRankings(type) {
+            try {
+                const response = await fetch(`${API_BASE}/api/reports/rankings?type=${type}&limit=25`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                displayRankings(data.data, type);
+            } catch (error) {
+                console.error('Error loading rankings:', error);
+                document.getElementById('rankingsContainer').innerHTML = '<div class="loading">Failed to load rankings</div>';
+            }
+        }
+
+        // Display rankings
+        function displayRankings(rankings, type) {
+            if (!rankings || rankings.length === 0) {
+                document.getElementById('rankingsContainer').innerHTML = '<div class="loading">No data available yet. Be the first to report!</div>';
+                return;
+            }
+
+            const html = rankings.map((item, index) => {
+                const rank = index + 1;
+                const topClass = rank <= 3 ? 'top3' : '';
+                const categories = Object.keys(item.categories).slice(0, 3);
+
+                return `
+                    <div class="rank-item">
+                        <div class="rank-number ${topClass}">#${rank}</div>
+                        <div class="rank-details">
+                            <div class="rank-name">${item.name}</div>
+                            <div class="rank-meta">
+                                <div class="categories-pills">
+                                    ${categories.map(cat => `<span class="category-pill">${cat}</span>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="rank-count">${item.count}</div>
+                            <div class="rank-count-label">Reports</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('rankingsContainer').innerHTML = `<div class="rankings">${html}</div>`;
+        }
+
+        // Switch view
+        function switchView(type) {
+            currentView = type;
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.type === type);
+            });
+            loadRankings(type);
+        }
+
+        // Form submission
+        document.getElementById('reportForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const resultEl = document.getElementById('result');
+            const submitBtn = e.target.querySelector('.submit-btn');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            resultEl.innerHTML = '';
+
+            const formData = {
+                category: document.getElementById('category').value,
+                make: document.getElementById('make').value,
+                model: document.getElementById('model').value,
+                modelNumber: document.getElementById('modelNumber').value || undefined,
+                issue: document.getElementById('issue').value,
+                address: document.getElementById('address').value,
+                shareFullAddress: document.getElementById('shareAddress').checked,
+                shareModelNumber: document.getElementById('shareModelNumber').checked
+            };
+
+            Object.keys(formData).forEach(key => {
+                if (formData[key] === undefined) delete formData[key];
+            });
+
+            try {
+                const response = await fetch(`${API_BASE}/api/reports`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultEl.className = 'result success';
+                    resultEl.textContent = '✅ Report submitted! Rankings will update shortly.';
+                    e.target.reset();
+
+                    // Reload rankings
+                    setTimeout(() => loadRankings(currentView), 2000);
+                } else {
+                    throw new Error(data.message || 'Failed to submit');
+                }
+            } catch (error) {
+                resultEl.className = 'result error';
+                resultEl.textContent = `❌ Error: ${error.message}`;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Report';
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>

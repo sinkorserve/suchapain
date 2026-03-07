@@ -198,6 +198,102 @@ app.get('/api/reports/map/zipcode', optionalAuth, async (req, res) => {
   }
 });
 
+// Get top worst offenders (brands, models, or serial numbers)
+app.get('/api/reports/rankings', optionalAuth, async (req, res) => {
+  try {
+    const requesterId = req.user ? req.user.uid : null;
+    const type = req.query.type || 'brand'; // brand, model, serial
+    const limit = parseInt(req.query.limit) || 25;
+
+    const events = await firebaseService.queryProductEvents({});
+    const rankings = {};
+
+    events.forEach(event => {
+      const publicView = event.getPublicView(requesterId);
+      let key;
+
+      if (type === 'brand') {
+        key = publicView.make;
+      } else if (type === 'model') {
+        key = `${publicView.make} ${publicView.model}`;
+      } else if (type === 'serial' && publicView.modelNumber) {
+        key = publicView.modelNumber;
+      }
+
+      if (key) {
+        if (!rankings[key]) {
+          rankings[key] = {
+            name: key,
+            count: 0,
+            categories: {},
+            recentIssues: []
+          };
+        }
+        rankings[key].count++;
+        rankings[key].categories[publicView.category] = (rankings[key].categories[publicView.category] || 0) + 1;
+        if (rankings[key].recentIssues.length < 3) {
+          rankings[key].recentIssues.push(publicView.issue.substring(0, 100));
+        }
+      }
+    });
+
+    const topRankings = Object.values(rankings)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit);
+
+    res.json({
+      success: true,
+      type: type,
+      count: topRankings.length,
+      data: topRankings
+    });
+  } catch (error) {
+    console.error('Error fetching rankings:', error);
+    res.status(500).json({
+      error: 'Failed to fetch rankings',
+      message: error.message
+    });
+  }
+});
+
+// Get user's ZIP code from IP address
+app.get('/api/location/ip', async (req, res) => {
+  try {
+    // Get client IP
+    const clientIp = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress;
+
+    // For local development, return default location
+    if (clientIp === '::1' || clientIp === '127.0.0.1' || clientIp?.includes('::ffff:127')) {
+      return res.json({
+        success: true,
+        zipCode: '94102',
+        city: 'San Francisco',
+        state: 'CA',
+        location: { lat: 37.7749, lng: -122.4194 },
+        source: 'default'
+      });
+    }
+
+    // For production, you would use a geolocation service like ipapi.co
+    // const response = await axios.get(`https://ipapi.co/${clientIp}/json/`);
+    // For now, return default
+    res.json({
+      success: true,
+      zipCode: '94102',
+      city: 'San Francisco',
+      state: 'CA',
+      location: { lat: 37.7749, lng: -122.4194 },
+      source: 'default'
+    });
+  } catch (error) {
+    console.error('Error getting location from IP:', error);
+    res.status(500).json({
+      error: 'Failed to get location',
+      message: error.message
+    });
+  }
+});
+
 // Get all reports for map view (optional authentication) - DEPRECATED, use /zipcode instead
 app.get('/api/reports/map/all', optionalAuth, async (req, res) => {
   try {
