@@ -25,7 +25,14 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+// CORS configuration
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production'
+    ? process.env.FRONTEND_URL || true
+    : true,
+  credentials: true
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Serve static files from public directory
@@ -38,7 +45,16 @@ let productEventController;
 // Load Firebase credentials
 function loadFirebaseConfig() {
   try {
-    // Option 1: Load from service account JSON file
+    // Option 1: Load from service account JSON string (for production)
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+      return {
+        serviceAccount,
+        databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}.firebaseio.com`
+      };
+    }
+
+    // Option 2: Load from service account JSON file
     if (process.env.FIREBASE_SERVICE_ACCOUNT_PATH) {
       const serviceAccount = JSON.parse(
         readFileSync(process.env.FIREBASE_SERVICE_ACCOUNT_PATH, 'utf8')
@@ -49,7 +65,7 @@ function loadFirebaseConfig() {
       };
     }
 
-    // Option 2: Load from environment variables
+    // Option 3: Load from individual environment variables
     if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
       return {
         serviceAccount: {
@@ -64,7 +80,7 @@ function loadFirebaseConfig() {
     throw new Error('Firebase credentials not found in environment variables');
   } catch (error) {
     console.error('Error loading Firebase config:', error.message);
-    console.error('Please set FIREBASE_SERVICE_ACCOUNT_PATH or provide credentials in .env file');
+    console.error('Please set FIREBASE_SERVICE_ACCOUNT_JSON, FIREBASE_SERVICE_ACCOUNT_PATH, or provide individual credentials in environment');
     process.exit(1);
   }
 }
