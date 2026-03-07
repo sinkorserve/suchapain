@@ -294,6 +294,82 @@ app.get('/api/location/ip', async (req, res) => {
   }
 });
 
+// Get time series data for complaint trends
+app.get('/api/reports/timeseries', optionalAuth, async (req, res) => {
+  try {
+    const requesterId = req.user ? req.user.uid : null;
+    const brand = req.query.brand;
+    const model = req.query.model;
+    const range = req.query.range || '1Y'; // 1M, 3M, 6M, 1Y, 5Y
+
+    const events = await firebaseService.queryProductEvents({});
+
+    // Calculate date range
+    const now = new Date();
+    const rangeMap = {
+      '1M': 30,
+      '3M': 90,
+      '6M': 180,
+      '1Y': 365,
+      '5Y': 365 * 5
+    };
+    const daysBack = rangeMap[range] || 365;
+    const startDate = new Date(now.getTime() - (daysBack * 24 * 60 * 60 * 1000));
+
+    // Group by date
+    const timeSeriesData = {};
+
+    events.forEach(event => {
+      const publicView = event.getPublicView(requesterId);
+      const createdAt = new Date(publicView.createdAt);
+
+      if (createdAt < startDate) return;
+
+      // Filter by brand/model if provided
+      if (brand && publicView.make !== brand) return;
+      if (model && `${publicView.make} ${publicView.model}` !== model) return;
+
+      const dateKey = createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
+
+      if (!timeSeriesData[dateKey]) {
+        timeSeriesData[dateKey] = {
+          date: dateKey,
+          count: 0,
+          categories: {}
+        };
+      }
+
+      timeSeriesData[dateKey].count++;
+      timeSeriesData[dateKey].categories[publicView.category] =
+        (timeSeriesData[dateKey].categories[publicView.category] || 0) + 1;
+    });
+
+    // Convert to array and sort by date
+    const sortedData = Object.values(timeSeriesData)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Fill in missing dates with 0 counts for smooth chart
+    const filledData = [];
+    for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
+      const dateKey = d.toISOString().split('T')[0];
+      const existing = sortedData.find(item => item.date === dateKey);
+      filledData.push(existing || { date: dateKey, count: 0, categories: {} });
+    }
+
+    res.json({
+      success: true,
+      range: range,
+      data: filledData
+    });
+  } catch (error) {
+    console.error('Error fetching time series:', error);
+    res.status(500).json({
+      error: 'Failed to fetch time series',
+      message: error.message
+    });
+  }
+});
+
 // Get all reports for map view (optional authentication) - DEPRECATED, use /zipcode instead
 app.get('/api/reports/map/all', optionalAuth, async (req, res) => {
   try {

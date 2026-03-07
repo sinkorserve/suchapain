@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product CRM Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header-left h1 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #666;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-email {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .sign-out-btn {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .sign-out-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        button[type="submit"]:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            display: block;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            display: block;
+        }
+
+        .result pre {
+            margin-top: 10px;
+            background: rgba(0,0,0,0.05);
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+
+        .api-status {
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .api-status.online {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .api-status.offline {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <div class="loading">
+            🔐 Checking authentication...
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        // Check authentication on page load
+        async function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            const userEmail = localStorage.getItem('userEmail');
+            const userPhone = localStorage.getItem('userPhone');
+
+            if (!token) {
+                // No token, redirect to auth page
+                window.location.href = '/auth.html';
+                return;
+            }
+
+            // Verify token is still valid by checking API
+            try {
+                const response = await fetch(`${API_BASE}/health`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    // Token is valid, show the app
+                    showApp(userEmail || userPhone || 'User');
+                } else {
+                    // Token invalid, redirect to auth
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userEmail');
+                    localStorage.removeItem('userPhone');
+                    window.location.href = '/auth.html';
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                // On error, redirect to auth to be safe
+                window.location.href = '/auth.html';
+            }
+        }
+
+        // Show the main app interface
+        function showApp(userIdentifier) {
+            const appContainer = document.getElementById('app');
+            appContainer.innerHTML = `
+                <div class="header">
+                    <div class="header-left">
+                        <h1>🔧 Product CRM Manager</h1>
+                        <p class="subtitle">Create Product Issue Reports</p>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-email">${userIdentifier}</div>
+                        <a href="/map.html" style="background: rgba(255,255,255,0.2); color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; margin-right: 10px;">📍 View Map</a>
+                        <button class="sign-out-btn" onclick="signOut()">Sign Out</button>
+                    </div>
+                </div>
+
+                <div id="apiStatus" class="api-status">
+                    Checking API status...
+                </div>
+
+                <form id="reportForm">
+                    <div class="form-group">
+                        <label for="category">Category *</label>
+                        <select id="category" required>
+                            <option value="">Select a category</option>
+                            <option value="Appliance">Appliance</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Furniture">Furniture</option>
+                            <option value="Tools">Tools</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="make">Make/Brand *</label>
+                        <input type="text" id="make" placeholder="e.g., Samsung, LG, Apple" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="model">Model *</label>
+                        <input type="text" id="model" placeholder="e.g., RF28R7351SR" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modelNumber">Serial Number (optional)</label>
+                        <input type="text" id="modelNumber" placeholder="e.g., SN123456789">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="issue">Issue Description *</label>
+                        <textarea id="issue" placeholder="Describe the problem in detail..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">Address *</label>
+                        <input type="text" id="address" placeholder="e.g., 123 Main Street, San Francisco, CA 94102" required>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="shareAddress">
+                            <label for="shareAddress" style="margin: 0;">Share full address publicly</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="shareModelNumber">
+                            <label for="shareModelNumber" style="margin: 0;">Share serial number publicly</label>
+                        </div>
+                    </div>
+
+                    <button type="submit">Create Report</button>
+                </form>
+
+                <div id="result" class="result"></div>
+            `;
+
+            // Check API status
+            checkAPIStatus();
+
+            // Add form submit handler
+            document.getElementById('reportForm').addEventListener('submit', handleSubmit);
+        }
+
+        // Check API status
+        async function checkAPIStatus() {
+            const statusEl = document.getElementById('apiStatus');
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                if (data.status === 'ok') {
+                    statusEl.className = 'api-status online';
+                    statusEl.innerHTML = '✅ API is online and ready';
+                } else {
+                    throw new Error('API returned unexpected status');
+                }
+            } catch (error) {
+                statusEl.className = 'api-status offline';
+                statusEl.innerHTML = '❌ API is offline. Make sure the server is running on port 3000.';
+            }
+        }
+
+        // Handle form submission
+        async function handleSubmit(e) {
+            e.preventDefault();
+
+            const resultEl = document.getElementById('result');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const token = localStorage.getItem('authToken');
+
+            if (!token) {
+                resultEl.className = 'result error';
+                resultEl.innerHTML = `
+                    <strong>❌ Authentication Required</strong>
+                    <p>Your session has expired. Please <a href="/auth.html">sign in again</a>.</p>
+                `;
+                return;
+            }
+
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating Report...';
+
+            // Gather form data (no userId field anymore)
+            const formData = {
+                category: document.getElementById('category').value,
+                make: document.getElementById('make').value,
+                model: document.getElementById('model').value,
+                modelNumber: document.getElementById('modelNumber').value || undefined,
+                issue: document.getElementById('issue').value,
+                address: document.getElementById('address').value,
+                shareFullAddress: document.getElementById('shareAddress').checked,
+                shareModelNumber: document.getElementById('shareModelNumber').checked
+            };
+
+            // Remove undefined fields
+            Object.keys(formData).forEach(key => {
+                if (formData[key] === undefined) delete formData[key];
+            });
+
+            try {
+                const response = await fetch(`${API_BASE}/api/reports`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.status === 401) {
+                    // Token expired or invalid
+                    resultEl.className = 'result error';
+                    resultEl.innerHTML = `
+                        <strong>❌ Session Expired</strong>
+                        <p>${data.message || 'Please sign in again.'}</p>
+                        <p><a href="/auth.html">Go to Sign In</a></p>
+                    `;
+                    // Clear stored token
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userEmail');
+                    localStorage.removeItem('userPhone');
+                } else if (response.ok) {
+                    resultEl.className = 'result success';
+                    resultEl.innerHTML = `
+                        <strong>✅ Report Created Successfully!</strong>
+                        <p>Report ID: <strong>${data.reportId}</strong></p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+
+                    // Reset form
+                    e.target.reset();
+                } else {
+                    throw new Error(data.message || 'Failed to create report');
+                }
+            } catch (error) {
+                resultEl.className = 'result error';
+                resultEl.innerHTML = `
+                    <strong>❌ Error Creating Report</strong>
+                    <p>${error.message}</p>
+                    <p>Make sure:</p>
+                    <ul>
+                        <li>The API server is running (npm start)</li>
+                        <li>Firebase is configured correctly</li>
+                        <li>Google Maps API key is set</li>
+                        <li>You are signed in</li>
+                    </ul>
+                `;
+            } finally {
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Report';
+            }
+        }
+
+        // Sign out function
+        function signOut() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userPhone');
+            window.location.href = '/auth.html';
+        }
+
+        // Check auth on page load
+        checkAuth();
+    </script>
+</body>
+</html>

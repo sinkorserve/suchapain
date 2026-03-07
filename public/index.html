@@ -3,267 +3,451 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product CRM Manager</title>
+    <title>Product Quality Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            background: #ffffff;
+            color: #000000;
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-
+        /* Header */
         .header {
+            background: #ffffff;
+            border-bottom: 1px solid #e1e1e1;
+            padding: 12px 20px;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
         }
 
-        .header-left h1 {
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .subtitle {
-            color: #666;
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #6001d2;
         }
 
         .user-info {
-            text-align: right;
-        }
-
-        .user-email {
-            color: #667eea;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .sign-out-btn {
-            background: transparent;
-            color: #667eea;
-            border: 2px solid #667eea;
-            padding: 8px 16px;
-            border-radius: 6px;
             font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s;
+            color: #666;
         }
 
-        .sign-out-btn:hover {
-            background: #667eea;
-            color: white;
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 900px 1fr;
+            gap: 20px;
+        }
+
+        /* Chart Section */
+        .chart-section {
+            background: #ffffff;
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e1e1e1;
+        }
+
+        .chart-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #000000;
+        }
+
+        .chart-subtitle {
+            font-size: 13px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .range-selector {
+            display: flex;
+            gap: 8px;
+        }
+
+        .range-btn {
+            padding: 6px 14px;
+            background: #ffffff;
+            border: 1px solid #e1e1e1;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #000000;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .range-btn:hover {
+            background: #f7f7f7;
+        }
+
+        .range-btn.active {
+            background: #0078ff;
+            color: #ffffff;
+            border-color: #0078ff;
+        }
+
+        .chart-stats {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000000;
+        }
+
+        .stat-change {
+            font-size: 13px;
+            margin-top: 2px;
+        }
+
+        .stat-change.positive {
+            color: #16c784;
+        }
+
+        .stat-change.negative {
+            color: #ea3943;
+        }
+
+        .chart-container {
+            height: 400px;
+            position: relative;
+        }
+
+        /* Top 25 List */
+        .top-list-section {
+            background: #ffffff;
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+            padding: 20px;
+            height: fit-content;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e1e1e1;
+        }
+
+        .list-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #000000;
+        }
+
+        .view-toggles {
+            display: flex;
+            gap: 4px;
+            background: #f7f7f7;
+            padding: 2px;
+            border-radius: 4px;
+        }
+
+        .toggle-btn {
+            padding: 4px 10px;
+            background: transparent;
+            border: none;
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .list-table {
+            width: 100%;
+            font-size: 13px;
+        }
+
+        .list-table thead {
+            border-bottom: 1px solid #e1e1e1;
+        }
+
+        .list-table th {
+            text-align: left;
+            padding: 8px 4px;
+            font-weight: bold;
+            color: #666;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .list-table td {
+            padding: 10px 4px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .list-table tbody tr:hover {
+            background: #f7f7f7;
+            cursor: pointer;
+        }
+
+        .rank-cell {
+            color: #666;
+            font-weight: bold;
+            width: 30px;
+        }
+
+        .name-cell {
+            font-weight: bold;
+            color: #000000;
+        }
+
+        .count-cell {
+            text-align: right;
+            font-weight: bold;
+            color: #000000;
+        }
+
+        /* Form Section */
+        .form-section {
+            background: #ffffff;
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .form-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #000000;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
         }
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: #333;
+        .form-group label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 6px;
         }
 
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.3s;
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 8px 10px;
+            border: 1px solid #e1e1e1;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: Arial, sans-serif;
         }
 
-        input:focus, select:focus, textarea:focus {
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #0078ff;
         }
 
-        textarea {
+        .form-group textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 60px;
         }
 
         .checkbox-group {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
+            margin-top: 6px;
+            font-size: 12px;
+            color: #666;
         }
 
-        .checkbox-group input[type="checkbox"] {
-            width: auto;
-        }
-
-        button[type="submit"] {
-            width: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 14px 28px;
+        .submit-btn {
+            padding: 10px 24px;
+            background: #0078ff;
+            color: #ffffff;
             border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: background 0.2s;
         }
 
-        button[type="submit"]:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        .submit-btn:hover {
+            background: #0066dd;
         }
 
-        button[type="submit"]:active {
-            transform: translateY(0);
-        }
-
-        button[type="submit"]:disabled {
+        .submit-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
 
-        .result {
-            margin-top: 30px;
-            padding: 20px;
-            border-radius: 6px;
-            display: none;
-        }
-
-        .result.success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-            display: block;
-        }
-
-        .result.error {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-            display: block;
-        }
-
-        .result pre {
-            margin-top: 10px;
-            background: rgba(0,0,0,0.05);
-            padding: 10px;
-            border-radius: 4px;
-            overflow-x: auto;
-            font-size: 12px;
-        }
-
-        .api-status {
+        .result-message {
+            margin-top: 15px;
             padding: 10px 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 14px;
+            border-radius: 4px;
+            font-size: 13px;
         }
 
-        .api-status.online {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .result-message.success {
+            background: #e6f4ea;
+            color: #137333;
+            border: 1px solid #c6e1c6;
         }
 
-        .api-status.offline {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .result-message.error {
+            background: #fce8e6;
+            color: #c5221f;
+            border: 1px solid #f4c7c3;
         }
 
+        /* Loading */
         .loading {
             text-align: center;
             padding: 40px;
             color: #666;
         }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container" id="app">
-        <div class="loading">
-            🔐 Checking authentication...
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">Product Quality Tracker</div>
+            <div class="user-info" id="userInfo"></div>
         </div>
     </div>
 
-    <script>
-        const API_BASE = 'http://localhost:3000';
-
-        // Check authentication on page load
-        async function checkAuth() {
-            const token = localStorage.getItem('authToken');
-            const userEmail = localStorage.getItem('userEmail');
-            const userPhone = localStorage.getItem('userPhone');
-
-            if (!token) {
-                // No token, redirect to auth page
-                window.location.href = '/auth.html';
-                return;
-            }
-
-            // Verify token is still valid by checking API
-            try {
-                const response = await fetch(`${API_BASE}/health`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    // Token is valid, show the app
-                    showApp(userEmail || userPhone || 'User');
-                } else {
-                    // Token invalid, redirect to auth
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('userEmail');
-                    localStorage.removeItem('userPhone');
-                    window.location.href = '/auth.html';
-                }
-            } catch (error) {
-                console.error('Auth check failed:', error);
-                // On error, redirect to auth to be safe
-                window.location.href = '/auth.html';
-            }
-        }
-
-        // Show the main app interface
-        function showApp(userIdentifier) {
-            const appContainer = document.getElementById('app');
-            appContainer.innerHTML = `
-                <div class="header">
-                    <div class="header-left">
-                        <h1>🔧 Product CRM Manager</h1>
-                        <p class="subtitle">Create Product Issue Reports</p>
+    <div class="container">
+        <div class="main-grid">
+            <!-- Chart Section -->
+            <div class="chart-section">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title" id="chartTitle">Product Complaints Trend</div>
+                        <div class="chart-subtitle">Total complaints over time</div>
                     </div>
-                    <div class="user-info">
-                        <div class="user-email">${userIdentifier}</div>
-                        <a href="/map.html" style="background: rgba(255,255,255,0.2); color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; margin-right: 10px;">📍 View Map</a>
-                        <button class="sign-out-btn" onclick="signOut()">Sign Out</button>
+                    <div class="range-selector">
+                        <button class="range-btn" onclick="changeRange('1M')">1M</button>
+                        <button class="range-btn" onclick="changeRange('3M')">3M</button>
+                        <button class="range-btn" onclick="changeRange('6M')">6M</button>
+                        <button class="range-btn active" onclick="changeRange('1Y')">1Y</button>
+                        <button class="range-btn" onclick="changeRange('5Y')">5Y</button>
                     </div>
                 </div>
 
-                <div id="apiStatus" class="api-status">
-                    Checking API status...
+                <div class="chart-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Total Complaints</div>
+                        <div class="stat-value" id="totalComplaints">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">This Period</div>
+                        <div class="stat-value" id="periodComplaints">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Avg Per Day</div>
+                        <div class="stat-value" id="avgPerDay">0</div>
+                    </div>
                 </div>
 
-                <form id="reportForm">
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top 25 List -->
+            <div class="top-list-section">
+                <div class="list-header">
+                    <div class="list-title">Top 25 Worst Offenders</div>
+                    <div class="view-toggles">
+                        <button class="toggle-btn active" data-type="brand" onclick="switchListView('brand')">Brands</button>
+                        <button class="toggle-btn" data-type="model" onclick="switchListView('model')">Models</button>
+                        <button class="toggle-btn" data-type="serial" onclick="switchListView('serial')">Serials</button>
+                    </div>
+                </div>
+
+                <div id="topListContainer">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Form -->
+        <div class="form-section">
+            <div class="form-title">Report a Product Issue</div>
+            <form id="reportForm">
+                <div class="form-grid">
                     <div class="form-group">
-                        <label for="category">Category *</label>
+                        <label>Category</label>
                         <select id="category" required>
-                            <option value="">Select a category</option>
+                            <option value="">Select...</option>
                             <option value="Appliance">Appliance</option>
                             <option value="Electronics">Electronics</option>
                             <option value="Furniture">Furniture</option>
@@ -273,97 +457,265 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="make">Make/Brand *</label>
-                        <input type="text" id="make" placeholder="e.g., Samsung, LG, Apple" required>
+                        <label>Brand</label>
+                        <input type="text" id="make" placeholder="e.g., Samsung" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="model">Model *</label>
+                        <label>Model</label>
                         <input type="text" id="model" placeholder="e.g., RF28R7351SR" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="modelNumber">Serial Number (optional)</label>
-                        <input type="text" id="modelNumber" placeholder="e.g., SN123456789">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="issue">Issue Description *</label>
-                        <textarea id="issue" placeholder="Describe the problem in detail..." required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="address">Address *</label>
-                        <input type="text" id="address" placeholder="e.g., 123 Main Street, San Francisco, CA 94102" required>
-                    </div>
-
-                    <div class="form-group">
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="shareAddress">
-                            <label for="shareAddress" style="margin: 0;">Share full address publicly</label>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
+                        <label>Serial Number (Optional)</label>
+                        <input type="text" id="modelNumber" placeholder="SN123456789">
                         <div class="checkbox-group">
                             <input type="checkbox" id="shareModelNumber">
-                            <label for="shareModelNumber" style="margin: 0;">Share serial number publicly</label>
+                            <label>Share publicly</label>
                         </div>
                     </div>
 
-                    <button type="submit">Create Report</button>
-                </form>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <input type="text" id="address" placeholder="City, State ZIP" required>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="shareAddress">
+                            <label>Share full address</label>
+                        </div>
+                    </div>
 
-                <div id="result" class="result"></div>
-            `;
+                    <div class="form-group">
+                        <label>Issue Description</label>
+                        <textarea id="issue" placeholder="Describe the problem..." required></textarea>
+                    </div>
+                </div>
 
-            // Check API status
-            checkAPIStatus();
+                <button type="submit" class="submit-btn">Submit Report</button>
+                <div id="resultMessage"></div>
+            </form>
+        </div>
+    </div>
 
-            // Add form submit handler
-            document.getElementById('reportForm').addEventListener('submit', handleSubmit);
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        const token = localStorage.getItem('authToken');
+        const userEmail = localStorage.getItem('userEmail');
+        const userPhone = localStorage.getItem('userPhone');
+
+        if (!token) {
+            window.location.href = '/auth.html';
         }
 
-        // Check API status
-        async function checkAPIStatus() {
-            const statusEl = document.getElementById('apiStatus');
+        document.getElementById('userInfo').textContent = userEmail || userPhone || 'User';
+
+        let trendChart;
+        let currentRange = '1Y';
+        let currentListView = 'brand';
+        let selectedBrand = null;
+        let selectedModel = null;
+
+        // Initialize
+        async function init() {
+            await loadTimeSeriesData('1Y');
+            await loadTopList('brand');
+        }
+
+        // Load time series data
+        async function loadTimeSeriesData(range, brand = null, model = null) {
             try {
-                const response = await fetch(`${API_BASE}/health`);
+                let url = `${API_BASE}/api/reports/timeseries?range=${range}`;
+                if (brand) url += `&brand=${encodeURIComponent(brand)}`;
+                if (model) url += `&model=${encodeURIComponent(model)}`;
+
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
                 const data = await response.json();
-                if (data.status === 'ok') {
-                    statusEl.className = 'api-status online';
-                    statusEl.innerHTML = '✅ API is online and ready';
-                } else {
-                    throw new Error('API returned unexpected status');
-                }
+                displayChart(data.data, range);
             } catch (error) {
-                statusEl.className = 'api-status offline';
-                statusEl.innerHTML = '❌ API is offline. Make sure the server is running on port 3000.';
+                console.error('Error loading time series:', error);
             }
         }
 
-        // Handle form submission
-        async function handleSubmit(e) {
-            e.preventDefault();
+        // Display chart
+        function displayChart(data, range) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
 
-            const resultEl = document.getElementById('result');
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            const token = localStorage.getItem('authToken');
+            if (trendChart) {
+                trendChart.destroy();
+            }
 
-            if (!token) {
-                resultEl.className = 'result error';
-                resultEl.innerHTML = `
-                    <strong>❌ Authentication Required</strong>
-                    <p>Your session has expired. Please <a href="/auth.html">sign in again</a>.</p>
-                `;
+            const labels = data.map(d => d.date);
+            const counts = data.map(d => d.count);
+            const totalComplaints = counts.reduce((sum, c) => sum + c, 0);
+            const avgPerDay = (totalComplaints / data.length).toFixed(1);
+
+            document.getElementById('totalComplaints').textContent = totalComplaints.toLocaleString();
+            document.getElementById('periodComplaints').textContent = totalComplaints.toLocaleString();
+            document.getElementById('avgPerDay').textContent = avgPerDay;
+
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Complaints',
+                        data: counts,
+                        borderColor: '#0078ff',
+                        backgroundColor: 'rgba(0, 120, 255, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: '#0078ff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                title: function(items) {
+                                    return new Date(items[0].label).toLocaleDateString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxTicksLimit: 8,
+                                font: {
+                                    size: 11,
+                                    family: 'Arial'
+                                }
+                            }
+                        },
+                        y: {
+                            display: true,
+                            beginAtZero: true,
+                            grid: {
+                                color: '#f0f0f0'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 11,
+                                    family: 'Arial'
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        // Load top list
+        async function loadTopList(type) {
+            try {
+                const response = await fetch(`${API_BASE}/api/reports/rankings?type=${type}&limit=25`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                displayTopList(data.data, type);
+            } catch (error) {
+                console.error('Error loading top list:', error);
+            }
+        }
+
+        // Display top list
+        function displayTopList(rankings, type) {
+            if (!rankings || rankings.length === 0) {
+                document.getElementById('topListContainer').innerHTML = '<div class="loading">No data yet</div>';
                 return;
             }
 
-            // Disable submit button
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Creating Report...';
+            const rows = rankings.map((item, index) => `
+                <tr onclick="selectItem('${type}', '${item.name.replace(/'/g, "\\'")}')">
+                    <td class="rank-cell">${index + 1}</td>
+                    <td class="name-cell">${item.name}</td>
+                    <td class="count-cell">${item.count}</td>
+                </tr>
+            `).join('');
 
-            // Gather form data (no userId field anymore)
+            const html = `
+                <table class="list-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th style="text-align: right;">Reports</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('topListContainer').innerHTML = html;
+        }
+
+        // Change range
+        function changeRange(range) {
+            currentRange = range;
+            document.querySelectorAll('.range-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent === range);
+            });
+            loadTimeSeriesData(range, selectedBrand, selectedModel);
+        }
+
+        // Switch list view
+        function switchListView(type) {
+            currentListView = type;
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.type === type);
+            });
+            loadTopList(type);
+        }
+
+        // Select item to filter chart
+        function selectItem(type, name) {
+            if (type === 'brand') {
+                selectedBrand = name;
+                selectedModel = null;
+                document.getElementById('chartTitle').textContent = `${name} - Complaints Trend`;
+                loadTimeSeriesData(currentRange, name);
+            } else if (type === 'model') {
+                selectedModel = name;
+                document.getElementById('chartTitle').textContent = `${name} - Complaints Trend`;
+                loadTimeSeriesData(currentRange, null, name);
+            }
+        }
+
+        // Form submission
+        document.getElementById('reportForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const resultEl = document.getElementById('resultMessage');
+            const submitBtn = e.target.querySelector('.submit-btn');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            resultEl.innerHTML = '';
+
             const formData = {
                 category: document.getElementById('category').value,
                 make: document.getElementById('make').value,
@@ -375,7 +727,6 @@
                 shareModelNumber: document.getElementById('shareModelNumber').checked
             };
 
-            // Remove undefined fields
             Object.keys(formData).forEach(key => {
                 if (formData[key] === undefined) delete formData[key];
             });
@@ -392,61 +743,28 @@
 
                 const data = await response.json();
 
-                if (response.status === 401) {
-                    // Token expired or invalid
-                    resultEl.className = 'result error';
-                    resultEl.innerHTML = `
-                        <strong>❌ Session Expired</strong>
-                        <p>${data.message || 'Please sign in again.'}</p>
-                        <p><a href="/auth.html">Go to Sign In</a></p>
-                    `;
-                    // Clear stored token
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('userEmail');
-                    localStorage.removeItem('userPhone');
-                } else if (response.ok) {
-                    resultEl.className = 'result success';
-                    resultEl.innerHTML = `
-                        <strong>✅ Report Created Successfully!</strong>
-                        <p>Report ID: <strong>${data.reportId}</strong></p>
-                        <pre>${JSON.stringify(data, null, 2)}</pre>
-                    `;
-
-                    // Reset form
+                if (response.ok) {
+                    resultEl.className = 'result-message success';
+                    resultEl.textContent = 'Report submitted successfully! Chart will update shortly.';
                     e.target.reset();
+
+                    setTimeout(() => {
+                        loadTimeSeriesData(currentRange, selectedBrand, selectedModel);
+                        loadTopList(currentListView);
+                    }, 2000);
                 } else {
-                    throw new Error(data.message || 'Failed to create report');
+                    throw new Error(data.message || 'Failed to submit');
                 }
             } catch (error) {
-                resultEl.className = 'result error';
-                resultEl.innerHTML = `
-                    <strong>❌ Error Creating Report</strong>
-                    <p>${error.message}</p>
-                    <p>Make sure:</p>
-                    <ul>
-                        <li>The API server is running (npm start)</li>
-                        <li>Firebase is configured correctly</li>
-                        <li>Google Maps API key is set</li>
-                        <li>You are signed in</li>
-                    </ul>
-                `;
+                resultEl.className = 'result-message error';
+                resultEl.textContent = `Error: ${error.message}`;
             } finally {
-                // Re-enable submit button
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Create Report';
+                submitBtn.textContent = 'Submit Report';
             }
-        }
+        });
 
-        // Sign out function
-        function signOut() {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userEmail');
-            localStorage.removeItem('userPhone');
-            window.location.href = '/auth.html';
-        }
-
-        // Check auth on page load
-        checkAuth();
+        init();
     </script>
 </body>
 </html>
