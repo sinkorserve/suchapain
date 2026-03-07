@@ -129,6 +129,62 @@ export class ProductEventController {
   }
 
   /**
+   * Get reports aggregated by ZIP code for privacy-aware map view
+   * @param {string} requesterId - User making the request (optional)
+   * @returns {Promise<Array>} List of ZIP codes with aggregated report data
+   */
+  async getReportsByZipCode(requesterId = null) {
+    const events = await firebaseService.queryProductEvents({});
+
+    // Group reports by ZIP code
+    const zipCodeMap = new Map();
+
+    events.forEach(event => {
+      const publicView = event.getPublicView(requesterId);
+      const zipCode = publicView.zipCode;
+
+      if (!zipCode) return; // Skip reports without ZIP code
+
+      if (!zipCodeMap.has(zipCode)) {
+        zipCodeMap.set(zipCode, {
+          zipCode: zipCode,
+          count: 0,
+          reports: [],
+          categories: {},
+          makes: {},
+          // Use first report's location as ZIP code center approximation
+          location: publicView.location
+        });
+      }
+
+      const zipData = zipCodeMap.get(zipCode);
+      zipData.count++;
+
+      // Store report summary (without exact location)
+      zipData.reports.push({
+        id: event.id,
+        category: publicView.category,
+        make: publicView.make,
+        model: publicView.model,
+        issue: publicView.issue,
+        nearestIntersection: publicView.nearestIntersection,
+        createdAt: publicView.createdAt,
+        modelNumber: publicView.modelNumber
+      });
+
+      // Count by category
+      zipData.categories[publicView.category] = (zipData.categories[publicView.category] || 0) + 1;
+
+      // Count by make
+      zipData.makes[publicView.make] = (zipData.makes[publicView.make] || 0) + 1;
+    });
+
+    // Convert map to array and sort by count
+    return Array.from(zipCodeMap.values())
+      .sort((a, b) => b.count - a.count);
+  }
+
+  /**
    * Request permission to view private data
    * @param {string} reportId - Report ID
    * @param {string} requesterId - User requesting permission

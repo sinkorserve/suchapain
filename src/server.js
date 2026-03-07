@@ -177,7 +177,28 @@ app.get('/api/reports/:id', async (req, res) => {
   }
 });
 
-// Get all reports for map view (optional authentication)
+// Get reports aggregated by ZIP code for privacy-aware map view
+app.get('/api/reports/map/zipcode', optionalAuth, async (req, res) => {
+  try {
+    const requesterId = req.user ? req.user.uid : null;
+    const zipCodeData = await productEventController.getReportsByZipCode(requesterId);
+
+    res.json({
+      success: true,
+      count: zipCodeData.length,
+      totalReports: zipCodeData.reduce((sum, zip) => sum + zip.count, 0),
+      data: zipCodeData
+    });
+  } catch (error) {
+    console.error('Error fetching ZIP code data:', error);
+    res.status(500).json({
+      error: 'Failed to fetch ZIP code data',
+      message: error.message
+    });
+  }
+});
+
+// Get all reports for map view (optional authentication) - DEPRECATED, use /zipcode instead
 app.get('/api/reports/map/all', optionalAuth, async (req, res) => {
   try {
     const requesterId = req.user ? req.user.uid : null;

@@ -105,42 +105,97 @@
             color: #667eea;
         }
 
+        .privacy-notice {
+            background: #e7f3ff;
+            color: #0066cc;
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 14px;
+            border-bottom: 2px solid #0066cc;
+        }
+
         #map {
             width: 100%;
-            height: calc(100vh - 140px);
+            height: calc(100vh - 195px);
         }
 
         .info-window {
-            max-width: 300px;
+            max-width: 350px;
             padding: 10px;
         }
 
         .info-window h3 {
             color: #667eea;
             margin-bottom: 10px;
-            font-size: 16px;
+            font-size: 18px;
         }
 
-        .info-item {
-            margin-bottom: 8px;
+        .zip-stats {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .zip-stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
             font-size: 14px;
         }
 
-        .info-label {
+        .zip-stat-label {
             font-weight: 600;
-            color: #333;
-        }
-
-        .info-value {
             color: #666;
         }
 
+        .zip-stat-value {
+            color: #333;
+        }
+
+        .reports-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border-top: 2px solid #e0e0e0;
+            padding-top: 10px;
+        }
+
+        .report-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .report-header {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .report-category {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
+        .report-detail {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
         .issue-text {
-            background: #f5f5f5;
+            background: #f9f9f9;
             padding: 8px;
             border-radius: 4px;
-            margin-top: 8px;
-            font-size: 13px;
+            margin-top: 5px;
+            font-size: 12px;
             color: #555;
             font-style: italic;
         }
@@ -176,15 +231,32 @@
             border-radius: 6px;
             border-left: 4px solid #c33;
         }
+
+        /* Custom marker styles */
+        .marker-label {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 6px 10px;
+            border-radius: 20px;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>📍 Product Reports Map</h1>
+        <h1>📍 Product Reports Map by ZIP Code</h1>
         <div class="nav-buttons">
             <a href="/" class="nav-button">Create Report</a>
             <button class="nav-button" onclick="signOut()" id="signOutBtn" style="display: none;">Sign Out</button>
         </div>
+    </div>
+
+    <div class="privacy-notice">
+        🔒 Privacy Protected: Locations shown at ZIP code level only. Exact addresses are not displayed.
     </div>
 
     <div class="controls">
@@ -209,6 +281,10 @@
 
         <div class="stats">
             <div class="stat-item">
+                <span>ZIP Codes:</span>
+                <span class="stat-value" id="zipCount">0</span>
+            </div>
+            <div class="stat-item">
                 <span>Total Reports:</span>
                 <span class="stat-value" id="totalCount">0</span>
             </div>
@@ -230,7 +306,7 @@
         const API_BASE = 'http://localhost:3000';
         let map;
         let markers = [];
-        let allReports = [];
+        let allZipData = [];
         let infoWindow;
 
         // Check if user is signed in
@@ -248,26 +324,26 @@
 
         // Initialize map
         async function initMap() {
-            // Default center (San Francisco)
-            const center = { lat: 37.7749, lng: -122.4194 };
+            // Default center (USA)
+            const center = { lat: 39.8283, lng: -98.5795 };
 
             map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 4,
                 center: center,
                 mapTypeControl: true,
-                streetViewControl: true,
+                streetViewControl: false,
                 fullscreenControl: true,
                 zoomControl: true
             });
 
             infoWindow = new google.maps.InfoWindow();
 
-            // Load reports and create markers
-            await loadReports();
+            // Load ZIP code aggregated data
+            await loadZipCodeData();
         }
 
-        // Load all reports from API
-        async function loadReports() {
+        // Load ZIP code aggregated data from API
+        async function loadZipCodeData() {
             try {
                 const headers = {};
                 const token = localStorage.getItem('authToken');
@@ -275,21 +351,22 @@
                     headers['Authorization'] = `Bearer ${token}`;
                 }
 
-                const response = await fetch(`${API_BASE}/api/reports/map/all`, {
+                const response = await fetch(`${API_BASE}/api/reports/map/zipcode`, {
                     headers: headers
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to load reports');
+                    throw new Error('Failed to load ZIP code data');
                 }
 
                 const data = await response.json();
-                allReports = data.data || [];
+                allZipData = data.data || [];
 
-                document.getElementById('totalCount').textContent = allReports.length;
+                document.getElementById('zipCount').textContent = allZipData.length;
+                document.getElementById('totalCount').textContent = data.totalReports || 0;
                 document.getElementById('loading').style.display = 'none';
 
-                if (allReports.length === 0) {
+                if (allZipData.length === 0) {
                     alert('No reports found. Create your first report!');
                     return;
                 }
@@ -297,14 +374,14 @@
                 // Populate brand filter
                 populateBrandFilter();
 
-                // Create markers for all reports
-                createMarkers();
+                // Create markers for all ZIP codes
+                createZipMarkers();
 
                 // Fit map to show all markers
                 fitMapToMarkers();
 
             } catch (error) {
-                console.error('Error loading reports:', error);
+                console.error('Error loading ZIP code data:', error);
                 document.getElementById('loading').style.display = 'none';
                 document.body.insertAdjacentHTML('beforeend', `
                     <div class="error-message">
@@ -316,9 +393,14 @@
             }
         }
 
-        // Populate brand filter with unique brands
+        // Populate brand filter with unique brands across all ZIP codes
         function populateBrandFilter() {
-            const brands = [...new Set(allReports.map(r => r.make))].sort();
+            const brandsSet = new Set();
+            allZipData.forEach(zipData => {
+                Object.keys(zipData.makes).forEach(make => brandsSet.add(make));
+            });
+
+            const brands = Array.from(brandsSet).sort();
             const select = document.getElementById('makeFilter');
 
             brands.forEach(brand => {
@@ -329,28 +411,42 @@
             });
         }
 
-        // Create markers for all reports
-        function createMarkers() {
+        // Create markers for all ZIP codes
+        function createZipMarkers() {
             // Clear existing markers
             markers.forEach(marker => marker.setMap(null));
             markers = [];
 
-            allReports.forEach(report => {
-                if (!report.location || !report.location.lat || !report.location.lng) {
-                    console.warn('Report missing location:', report.id);
+            allZipData.forEach(zipData => {
+                if (!zipData.location || !zipData.location.lat || !zipData.location.lng) {
+                    console.warn('ZIP code missing location:', zipData.zipCode);
                     return;
                 }
 
+                // Create custom marker with count label
                 const marker = new google.maps.Marker({
-                    position: { lat: report.location.lat, lng: report.location.lng },
+                    position: { lat: zipData.location.lat, lng: zipData.location.lng },
                     map: map,
-                    title: `${report.make} ${report.model}`,
-                    icon: getMarkerIcon(report.category),
-                    reportData: report
+                    title: `ZIP ${zipData.zipCode} - ${zipData.count} report(s)`,
+                    label: {
+                        text: zipData.count.toString(),
+                        color: 'white',
+                        fontSize: '14px',
+                        fontWeight: 'bold'
+                    },
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 20 + (zipData.count * 5), // Larger for more reports
+                        fillColor: '#667eea',
+                        fillOpacity: 0.8,
+                        strokeColor: '#FFFFFF',
+                        strokeWeight: 3
+                    },
+                    zipData: zipData
                 });
 
                 marker.addListener('click', () => {
-                    showInfoWindow(marker, report);
+                    showZipInfoWindow(marker, zipData);
                 });
 
                 markers.push(marker);
@@ -359,49 +455,58 @@
             updateVisibleCount();
         }
 
-        // Get marker icon color based on category
-        function getMarkerIcon(category) {
-            const colors = {
-                'Appliance': '#FF6B6B',
-                'Electronics': '#4ECDC4',
-                'Furniture': '#95E1D3',
-                'Tools': '#FFE66D',
-                'Other': '#999999'
-            };
+        // Show info window for a ZIP code marker
+        function showZipInfoWindow(marker, zipData) {
+            // Build category breakdown
+            const categoryList = Object.entries(zipData.categories)
+                .sort((a, b) => b[1] - a[1])
+                .map(([cat, count]) => `<div class="zip-stat"><span class="zip-stat-label">${cat}:</span><span class="zip-stat-value">${count}</span></div>`)
+                .join('');
 
-            const color = colors[category] || colors['Other'];
+            // Build make breakdown
+            const makeList = Object.entries(zipData.makes)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5) // Top 5 makes
+                .map(([make, count]) => `<div class="zip-stat"><span class="zip-stat-label">${make}:</span><span class="zip-stat-value">${count}</span></div>`)
+                .join('');
 
-            return {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 8,
-                fillColor: color,
-                fillOpacity: 0.8,
-                strokeColor: '#FFFFFF',
-                strokeWeight: 2
-            };
-        }
+            // Build report list
+            const reportsList = zipData.reports
+                .slice(0, 10) // Show first 10 reports
+                .map(report => `
+                    <div class="report-item">
+                        <div class="report-header">
+                            <span class="report-category">${report.category}</span>
+                            ${report.make} ${report.model}
+                        </div>
+                        ${report.nearestIntersection ? `<div class="report-detail">📍 ${report.nearestIntersection}</div>` : ''}
+                        ${report.modelNumber ? `<div class="report-detail">Serial: ${report.modelNumber}</div>` : ''}
+                        <div class="issue-text">"${report.issue.substring(0, 100)}${report.issue.length > 100 ? '...' : ''}"</div>
+                    </div>
+                `).join('');
 
-        // Show info window for a marker
-        function showInfoWindow(marker, report) {
             const content = `
                 <div class="info-window">
-                    <h3>${report.category}: ${report.make} ${report.model}</h3>
-                    <div class="info-item">
-                        <span class="info-label">Location:</span>
-                        <span class="info-value">${report.displayLocation || report.nearestIntersection || report.zipCode}</span>
+                    <h3>ZIP Code ${zipData.zipCode}</h3>
+
+                    <div class="zip-stats">
+                        <div class="zip-stat"><span class="zip-stat-label">Total Reports:</span><span class="zip-stat-value">${zipData.count}</span></div>
                     </div>
-                    ${report.modelNumber ? `
-                    <div class="info-item">
-                        <span class="info-label">Serial Number:</span>
-                        <span class="info-value">${report.modelNumber}</span>
+
+                    <strong style="display: block; margin: 10px 0 5px 0;">By Category:</strong>
+                    <div class="zip-stats">
+                        ${categoryList}
                     </div>
-                    ` : ''}
-                    <div class="info-item">
-                        <span class="info-label">Reported:</span>
-                        <span class="info-value">${new Date(report.createdAt).toLocaleDateString()}</span>
+
+                    <strong style="display: block; margin: 10px 0 5px 0;">Top Brands:</strong>
+                    <div class="zip-stats">
+                        ${makeList}
                     </div>
-                    <div class="issue-text">
-                        "${report.issue}"
+
+                    <strong style="display: block; margin: 10px 0 5px 0;">Recent Reports:</strong>
+                    <div class="reports-list">
+                        ${reportsList}
+                        ${zipData.reports.length > 10 ? `<div style="text-align: center; color: #666; font-size: 13px; padding: 10px;">... and ${zipData.reports.length - 10} more</div>` : ''}
                     </div>
                 </div>
             `;
@@ -416,14 +521,16 @@
             const makeFilter = document.getElementById('makeFilter').value;
 
             markers.forEach(marker => {
-                const report = marker.reportData;
+                const zipData = marker.zipData;
                 let visible = true;
 
-                if (categoryFilter && report.category !== categoryFilter) {
+                // Filter by category
+                if (categoryFilter && !zipData.categories[categoryFilter]) {
                     visible = false;
                 }
 
-                if (makeFilter && report.make !== makeFilter) {
+                // Filter by make
+                if (makeFilter && !zipData.makes[makeFilter]) {
                     visible = false;
                 }
 
@@ -435,8 +542,9 @@
 
         // Update visible count
         function updateVisibleCount() {
-            const visibleCount = markers.filter(m => m.getVisible()).length;
-            document.getElementById('visibleCount').textContent = visibleCount;
+            const visibleMarkers = markers.filter(m => m.getVisible());
+            const visibleReports = visibleMarkers.reduce((sum, m) => sum + m.zipData.count, 0);
+            document.getElementById('visibleCount').textContent = visibleReports;
         }
 
         // Fit map to show all visible markers
@@ -456,8 +564,8 @@
 
                 // Prevent zooming in too much for single marker
                 google.maps.event.addListenerOnce(map, 'bounds_changed', () => {
-                    if (map.getZoom() > 15) {
-                        map.setZoom(15);
+                    if (map.getZoom() > 12) {
+                        map.setZoom(12); // ZIP code level zoom
                     }
                 });
             }
