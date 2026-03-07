@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product CRM Manager - Report & Track Issues</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0f0f0f;
+            --bg-card: #1a1a1a;
+            --bg-input: #252525;
+            --primary: #ff6b35;
+            --primary-hover: #ff8555;
+            --secondary: #4ecdc4;
+            --accent: #ffe66d;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --border: #333;
+            --success: #00d4aa;
+            --error: #ff4757;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'SF Pro Display', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, #e8524a 100%);
+            padding: 20px 40px;
+            box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .user-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Main Container */
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 0;
+            height: calc(100vh - 80px);
+        }
+
+        /* Form Section */
+        .form-section {
+            background: var(--bg-card);
+            padding: 40px;
+            overflow-y: auto;
+            border-right: 1px solid var(--border);
+        }
+
+        .form-section h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-section p {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 15px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(255, 107, 53, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 107, 53, 0.2);
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            font-size: 14px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), #e8524a);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .result.success {
+            background: rgba(0, 212, 170, 0.1);
+            border: 2px solid var(--success);
+            color: var(--success);
+        }
+
+        .result.error {
+            background: rgba(255, 71, 87, 0.1);
+            border: 2px solid var(--error);
+            color: var(--error);
+        }
+
+        /* Map Section */
+        .map-section {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-dark);
+        }
+
+        .map-controls {
+            background: var(--bg-card);
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .map-controls h3 {
+            font-size: 18px;
+            color: var(--primary);
+            margin-right: 15px;
+        }
+
+        .filter-select {
+            padding: 10px 16px;
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+
+        .stats-badges {
+            margin-left: auto;
+            display: flex;
+            gap: 12px;
+        }
+
+        .stat-badge {
+            background: linear-gradient(135deg, rgba(78, 205, 196, 0.2), rgba(255, 230, 109, 0.2));
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid rgba(78, 205, 196, 0.3);
+        }
+
+        .stat-value {
+            color: var(--accent);
+            font-size: 16px;
+            margin-left: 6px;
+        }
+
+        #map {
+            flex: 1;
+            min-height: 400px;
+        }
+
+        .privacy-badge {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            color: var(--accent);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 100;
+            border: 1px solid rgba(255, 230, 109, 0.3);
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 107, 53, 0.2);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .form-section {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            #map {
+                min-height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .form-section {
+                padding: 24px;
+            }
+
+            .map-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .stats-badges {
+                margin-left: 0;
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔧 Product CRM Manager</h1>
+        <div class="header-nav">
+            <span class="user-badge" id="userBadge" style="display: none;"></span>
+            <a href="/dashboard.html" class="nav-btn">📊 Dashboard</a>
+            <button class="nav-btn" onclick="signOut()" id="signOutBtn" style="display: none;">Sign Out</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Form Section -->
+        <div class="form-section">
+            <h2>Report Product Issue</h2>
+            <p>Help track product quality issues in your area</p>
+
+            <form id="reportForm">
+                <div class="form-group">
+                    <label for="category">Category *</label>
+                    <select id="category" required>
+                        <option value="">Select category</option>
+                        <option value="Appliance">Appliance</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Tools">Tools</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="make">Make/Brand *</label>
+                    <input type="text" id="make" placeholder="e.g., Samsung, LG, Apple" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="model">Model *</label>
+                    <input type="text" id="model" placeholder="e.g., RF28R7351SR" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="modelNumber">Serial Number (optional)</label>
+                    <input type="text" id="modelNumber" placeholder="e.g., SN123456789">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="shareModelNumber">
+                        <label for="shareModelNumber">Share serial number publicly</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="issue">Issue Description *</label>
+                    <textarea id="issue" placeholder="Describe the problem in detail..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Address *</label>
+                    <input type="text" id="address" placeholder="e.g., 123 Main Street, San Francisco, CA 94102" required>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="shareAddress">
+                        <label for="shareAddress">Share full address publicly</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">📝 Submit Report</button>
+            </form>
+
+            <div id="result"></div>
+        </div>
+
+        <!-- Map Section -->
+        <div class="map-section">
+            <div class="map-controls">
+                <h3>📍 Live Map</h3>
+                <select class="filter-select" id="categoryFilter" onchange="filterMarkers()">
+                    <option value="">All Categories</option>
+                    <option value="Appliance">Appliance</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Furniture">Furniture</option>
+                    <option value="Tools">Tools</option>
+                    <option value="Other">Other</option>
+                </select>
+                <select class="filter-select" id="makeFilter" onchange="filterMarkers()">
+                    <option value="">All Brands</option>
+                </select>
+                <div class="stats-badges">
+                    <div class="stat-badge">
+                        ZIPs: <span class="stat-value" id="zipCount">0</span>
+                    </div>
+                    <div class="stat-badge">
+                        Reports: <span class="stat-value" id="totalCount">0</span>
+                    </div>
+                </div>
+            </div>
+            <div style="position: relative;">
+                <div class="privacy-badge">🔒 ZIP Code Level Privacy</div>
+                <div id="map"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        let map, infoWindow;
+        let markers = [];
+        let allZipData = [];
+
+        // Check authentication
+        const token = localStorage.getItem('authToken');
+        const userEmail = localStorage.getItem('userEmail');
+        const userPhone = localStorage.getItem('userPhone');
+
+        if (!token) {
+            window.location.href = '/auth.html';
+        } else {
+            document.getElementById('signOutBtn').style.display = 'block';
+            const userBadge = document.getElementById('userBadge');
+            userBadge.textContent = userEmail || userPhone || 'User';
+            userBadge.style.display = 'block';
+        }
+
+        function signOut() {
+            localStorage.clear();
+            window.location.href = '/auth.html';
+        }
+
+        // Initialize map
+        async function initMap() {
+            const center = { lat: 39.8283, lng: -98.5795 };
+
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 4,
+                center: center,
+                styles: [
+                    {
+                        elementType: 'geometry',
+                        stylers: [{ color: '#1a1a1a' }]
+                    },
+                    {
+                        elementType: 'labels.text.stroke',
+                        stylers: [{ color: '#0f0f0f' }]
+                    },
+                    {
+                        elementType: 'labels.text.fill',
+                        stylers: [{ color: '#808080' }]
+                    },
+                    {
+                        featureType: 'water',
+                        elementType: 'geometry',
+                        stylers: [{ color: '#000000' }]
+                    },
+                    {
+                        featureType: 'road',
+                        elementType: 'geometry',
+                        stylers: [{ color: '#2c2c2c' }]
+                    }
+                ]
+            });
+
+            infoWindow = new google.maps.InfoWindow();
+            await loadZipCodeData();
+        }
+
+        // Load ZIP code data
+        async function loadZipCodeData() {
+            try {
+                const response = await fetch(`${API_BASE}/api/reports/map/zipcode`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                allZipData = data.data || [];
+
+                document.getElementById('zipCount').textContent = allZipData.length;
+                document.getElementById('totalCount').textContent = data.totalReports || 0;
+
+                populateBrandFilter();
+                createZipMarkers();
+                fitMapToMarkers();
+            } catch (error) {
+                console.error('Error loading map data:', error);
+            }
+        }
+
+        function populateBrandFilter() {
+            const brands = new Set();
+            allZipData.forEach(zip => Object.keys(zip.makes).forEach(make => brands.add(make)));
+            const select = document.getElementById('makeFilter');
+            Array.from(brands).sort().forEach(brand => {
+                const option = document.createElement('option');
+                option.value = brand;
+                option.textContent = brand;
+                select.appendChild(option);
+            });
+        }
+
+        function createZipMarkers() {
+            markers.forEach(m => m.setMap(null));
+            markers = [];
+
+            allZipData.forEach(zipData => {
+                if (!zipData.location) return;
+
+                const marker = new google.maps.Marker({
+                    position: { lat: zipData.location.lat, lng: zipData.location.lng },
+                    map: map,
+                    label: {
+                        text: zipData.count.toString(),
+                        color: 'white',
+                        fontSize: '14px',
+                        fontWeight: 'bold'
+                    },
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 20 + (zipData.count * 5),
+                        fillColor: '#ff6b35',
+                        fillOpacity: 0.8,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 3
+                    },
+                    zipData: zipData
+                });
+
+                marker.addListener('click', () => showZipInfo(marker, zipData));
+                markers.push(marker);
+            });
+        }
+
+        function showZipInfo(marker, zipData) {
+            const categoryList = Object.entries(zipData.categories)
+                .sort((a, b) => b[1] - a[1])
+                .map(([cat, count]) => `<div style="display: flex; justify-content: space-between; padding: 4px 0;"><strong>${cat}:</strong> <span>${count}</span></div>`)
+                .join('');
+
+            const content = `
+                <div style="padding: 10px; max-width: 300px;">
+                    <h3 style="color: #ff6b35; margin-bottom: 10px;">ZIP ${zipData.zipCode}</h3>
+                    <div style="background: #f5f5f5; padding: 10px; border-radius: 8px;">
+                        <div style="font-weight: bold; margin-bottom: 8px;">Total Reports: ${zipData.count}</div>
+                        ${categoryList}
+                    </div>
+                </div>
+            `;
+
+            infoWindow.setContent(content);
+            infoWindow.open(map, marker);
+        }
+
+        function filterMarkers() {
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const makeFilter = document.getElementById('makeFilter').value;
+
+            markers.forEach(marker => {
+                const zipData = marker.zipData;
+                let visible = true;
+
+                if (categoryFilter && !zipData.categories[categoryFilter]) visible = false;
+                if (makeFilter && !zipData.makes[makeFilter]) visible = false;
+
+                marker.setVisible(visible);
+            });
+        }
+
+        function fitMapToMarkers() {
+            if (markers.length === 0) return;
+            const bounds = new google.maps.LatLngBounds();
+            markers.forEach(m => bounds.extend(m.getPosition()));
+            map.fitBounds(bounds);
+            google.maps.event.addListenerOnce(map, 'bounds_changed', () => {
+                if (map.getZoom() > 12) map.setZoom(12);
+            });
+        }
+
+        // Form submission
+        document.getElementById('reportForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const loading = document.getElementById('loading');
+            const resultEl = document.getElementById('result');
+            const submitBtn = e.target.querySelector('.submit-btn');
+
+            loading.style.display = 'block';
+            submitBtn.disabled = true;
+            resultEl.innerHTML = '';
+
+            const formData = {
+                category: document.getElementById('category').value,
+                make: document.getElementById('make').value,
+                model: document.getElementById('model').value,
+                modelNumber: document.getElementById('modelNumber').value || undefined,
+                issue: document.getElementById('issue').value,
+                address: document.getElementById('address').value,
+                shareFullAddress: document.getElementById('shareAddress').checked,
+                shareModelNumber: document.getElementById('shareModelNumber').checked
+            };
+
+            Object.keys(formData).forEach(key => {
+                if (formData[key] === undefined) delete formData[key];
+            });
+
+            try {
+                const response = await fetch(`${API_BASE}/api/reports`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultEl.className = 'result success';
+                    resultEl.innerHTML = `<strong>✅ Success!</strong><br>Report created successfully! The map will update shortly.`;
+                    e.target.reset();
+
+                    // Reload map data
+                    setTimeout(() => loadZipCodeData(), 2000);
+                } else {
+                    throw new Error(data.message || 'Failed to create report');
+                }
+            } catch (error) {
+                resultEl.className = 'result error';
+                resultEl.innerHTML = `<strong>❌ Error:</strong><br>${error.message}`;
+            } finally {
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Load Google Maps
+        async function loadGoogleMaps() {
+            const response = await fetch(`${API_BASE}/api/google-maps-key`);
+            const data = await response.json();
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${data.apiKey}&callback=initMap`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        }
+
+        window.initMap = initMap;
+        loadGoogleMaps();
+    </script>
+</body>
+</html>

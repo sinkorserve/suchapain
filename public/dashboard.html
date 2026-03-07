@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Product CRM Manager</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0f0f0f;
+            --bg-card: #1a1a1a;
+            --bg-hover: #252525;
+            --primary: #ff6b35;
+            --secondary: #4ecdc4;
+            --accent: #ffe66d;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --border: #333;
+            --success: #00d4aa;
+            --error: #ff4757;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'SF Pro Display', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, #e8524a 100%);
+            padding: 20px 40px;
+            box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        /* Dashboard Container */
+        .dashboard {
+            padding: 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .dashboard-title {
+            font-size: 32px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .dashboard-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.2);
+            border-color: var(--primary);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .stat-value {
+            font-size: 42px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        .stat-change {
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--success);
+        }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .chart-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Recent Reports */
+        .recent-reports {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .recent-reports h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .report-item {
+            background: var(--bg-hover);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s;
+        }
+
+        .report-item:hover {
+            background: #2a2a2a;
+            transform: translateX(5px);
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .report-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .report-category {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .report-details {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .report-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 400px;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 107, 53, 0.2);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                padding: 20px;
+            }
+
+            .header {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-card {
+                padding: 20px;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Analytics Dashboard</h1>
+        <div class="header-nav">
+            <a href="/index-new.html" class="nav-btn">← Back to Reports</a>
+            <button class="nav-btn" onclick="signOut()">Sign Out</button>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <h2 class="dashboard-title">Product Quality Insights</h2>
+        <p class="dashboard-subtitle">Real-time analytics and trends across all product reports</p>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+        </div>
+
+        <div id="content" style="display: none;">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Reports</div>
+                    <div class="stat-value" id="totalReports">0</div>
+                    <div class="stat-change">📈 All time</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">ZIP Codes</div>
+                    <div class="stat-value" id="totalZips">0</div>
+                    <div class="stat-change">🗺️ Geographic coverage</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Categories</div>
+                    <div class="stat-value" id="totalCategories">0</div>
+                    <div class="stat-change">📦 Product types</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Brands</div>
+                    <div class="stat-value" id="totalBrands">0</div>
+                    <div class="stat-change">🏷️ Manufacturers</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">Reports by Category</h3>
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">Top Brands</h3>
+                    <div class="chart-container">
+                        <canvas id="brandChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">Geographic Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="zipChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">Issue Trends</h3>
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Reports -->
+            <div class="recent-reports">
+                <h2>Recent Reports</h2>
+                <div id="recentReportsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        const token = localStorage.getItem('authToken');
+
+        if (!token) {
+            window.location.href = '/auth.html';
+        }
+
+        function signOut() {
+            localStorage.clear();
+            window.location.href = '/auth.html';
+        }
+
+        let charts = {};
+
+        async function loadDashboardData() {
+            try {
+                const response = await fetch(`${API_BASE}/api/reports/map/zipcode`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                const zipData = data.data || [];
+
+                // Calculate stats
+                const totalReports = zipData.reduce((sum, zip) => sum + zip.count, 0);
+                const allCategories = new Set();
+                const allBrands = new Set();
+                const categoryTotals = {};
+                const brandTotals = {};
+                const zipTotals = {};
+
+                zipData.forEach(zip => {
+                    Object.keys(zip.categories).forEach(cat => {
+                        allCategories.add(cat);
+                        categoryTotals[cat] = (categoryTotals[cat] || 0) + zip.categories[cat];
+                    });
+
+                    Object.keys(zip.makes).forEach(brand => {
+                        allBrands.add(brand);
+                        brandTotals[brand] = (brandTotals[brand] || 0) + zip.makes[brand];
+                    });
+
+                    zipTotals[zip.zipCode] = zip.count;
+                });
+
+                // Update stats
+                document.getElementById('totalReports').textContent = totalReports;
+                document.getElementById('totalZips').textContent = zipData.length;
+                document.getElementById('totalCategories').textContent = allCategories.size;
+                document.getElementById('totalBrands').textContent = allBrands.size;
+
+                // Create charts
+                createCategoryChart(categoryTotals);
+                createBrandChart(brandTotals);
+                createZipChart(zipTotals);
+                createTrendChart(categoryTotals);
+
+                // Show recent reports
+                displayRecentReports(zipData);
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                document.getElementById('loading').innerHTML = '<div style="color: var(--error);">Failed to load dashboard data</div>';
+            }
+        }
+
+        function createCategoryChart(data) {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            charts.category = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(data),
+                    datasets: [{
+                        data: Object.values(data),
+                        backgroundColor: [
+                            '#ff6b35',
+                            '#4ecdc4',
+                            '#ffe66d',
+                            '#95e1d3',
+                            '#ff8555'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#ffffff', font: { size: 13 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createBrandChart(data) {
+            const topBrands = Object.entries(data)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 8);
+
+            const ctx = document.getElementById('brandChart').getContext('2d');
+            charts.brand = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: topBrands.map(b => b[0]),
+                    datasets: [{
+                        label: 'Reports',
+                        data: topBrands.map(b => b[1]),
+                        backgroundColor: 'rgba(255, 107, 53, 0.8)',
+                        borderColor: '#ff6b35',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#b0b0b0' },
+                            grid: { color: '#333' }
+                        },
+                        x: {
+                            ticks: { color: '#b0b0b0' },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function createZipChart(data) {
+            const topZips = Object.entries(data)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            const ctx = document.getElementById('zipChart').getContext('2d');
+            charts.zip = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: topZips.map(z => `ZIP ${z[0]}`),
+                    datasets: [{
+                        label: 'Reports',
+                        data: topZips.map(z => z[1]),
+                        backgroundColor: 'rgba(78, 205, 196, 0.8)',
+                        borderColor: '#4ecdc4',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: { color: '#b0b0b0' },
+                            grid: { color: '#333' }
+                        },
+                        y: {
+                            ticks: { color: '#b0b0b0' },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function createTrendChart(data) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            charts.trend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(data),
+                    datasets: [{
+                        label: 'Total Reports',
+                        data: Object.values(data),
+                        borderColor: '#ffe66d',
+                        backgroundColor: 'rgba(255, 230, 109, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#b0b0b0' },
+                            grid: { color: '#333' }
+                        },
+                        x: {
+                            ticks: { color: '#b0b0b0' },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#ffffff' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function displayRecentReports(zipData) {
+            const allReports = [];
+            zipData.forEach(zip => {
+                zip.reports.forEach(report => {
+                    allReports.push({
+                        ...report,
+                        zipCode: zip.zipCode
+                    });
+                });
+            });
+
+            allReports.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            const recent = allReports.slice(0, 10);
+
+            const html = recent.map(report => `
+                <div class="report-item">
+                    <div class="report-header">
+                        <span class="report-title">${report.make} ${report.model}</span>
+                        <span class="report-category">${report.category}</span>
+                    </div>
+                    <div class="report-details">
+                        ${report.issue.substring(0, 100)}${report.issue.length > 100 ? '...' : ''}
+                    </div>
+                    <div class="report-date">
+                        📍 ZIP ${report.zipCode} • ${new Date(report.createdAt).toLocaleDateString()}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('recentReportsList').innerHTML = html || '<div style="color: var(--text-secondary);">No reports yet</div>';
+        }
+
+        loadDashboardData();
+    </script>
+</body>
+</html>
