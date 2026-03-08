@@ -871,9 +871,11 @@
                     headers['Authorization'] = `Bearer ${token}`;
                 }
 
-                const response = await fetch(`${API_BASE}/api/reports/by-zipcode`, { headers });
+                const response = await fetch(`${API_BASE}/api/reports/map/zipcode`, { headers });
                 const data = await response.json();
-                const zipData = data.zipCodes || [];
+                const zipData = data.data || [];
+
+                console.log('ZIP Code data:', zipData); // Debug log
 
                 // Initialize map centered on US
                 map = new google.maps.Map(document.getElementById('map'), {
@@ -883,18 +885,35 @@
 
                 // Add markers for each ZIP code
                 zipData.forEach(zip => {
-                    if (zip.lat && zip.lng) {
+                    // Check if location exists and has lat/lng
+                    if (zip.location && zip.location.lat && zip.location.lng) {
                         const marker = new google.maps.Marker({
-                            position: { lat: zip.lat, lng: zip.lng },
+                            position: { lat: zip.location.lat, lng: zip.location.lng },
                             map: map,
-                            title: `${zip.zipCode}: ${zip.count} report(s)`
+                            title: `${zip.zipCode}: ${zip.count} report(s)`,
+                            label: {
+                                text: zip.count.toString(),
+                                color: 'white',
+                                fontSize: '12px',
+                                fontWeight: 'bold'
+                            }
                         });
 
                         const infoWindow = new google.maps.InfoWindow({
                             content: `
-                                <div style="padding: 10px;">
-                                    <h3 style="margin: 0 0 10px 0;">ZIP: ${zip.zipCode}</h3>
+                                <div style="padding: 10px; font-family: Arial, sans-serif;">
+                                    <h3 style="margin: 0 0 10px 0; color: #6001d2;">ZIP: ${zip.zipCode}</h3>
                                     <p style="margin: 0;"><strong>${zip.count}</strong> report(s)</p>
+                                    ${Object.keys(zip.makes).length > 0 ? `
+                                        <p style="margin: 10px 0 5px 0; font-weight: bold;">Top Brands:</p>
+                                        <ul style="margin: 0; padding-left: 20px;">
+                                            ${Object.entries(zip.makes)
+                                                .sort((a, b) => b[1] - a[1])
+                                                .slice(0, 3)
+                                                .map(([make, count]) => `<li>${make}: ${count}</li>`)
+                                                .join('')}
+                                        </ul>
+                                    ` : ''}
                                 </div>
                             `
                         });
@@ -904,8 +923,16 @@
                         });
                     }
                 });
+
+                if (zipData.length > 0) {
+                    console.log(`Map rendered with ${zipData.length} ZIP code markers`);
+                } else {
+                    console.log('No ZIP code data available for map');
+                    document.getElementById('map').innerHTML = '<div class="loading">No location data available yet. Submit reports to see them on the map!</div>';
+                }
             } catch (error) {
                 console.error('Error rendering map:', error);
+                document.getElementById('map').innerHTML = '<div class="loading">Error loading map</div>';
             }
         }
 
