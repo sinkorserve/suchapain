@@ -327,9 +327,24 @@ app.get('/api/reports/timeseries', optionalAuth, async (req, res) => {
           return;
         }
 
-        const createdAt = new Date(publicView.createdAt);
+        // Handle Firebase Timestamp objects
+        let createdAt;
+        if (publicView.createdAt.toDate && typeof publicView.createdAt.toDate === 'function') {
+          // Firebase Timestamp
+          createdAt = publicView.createdAt.toDate();
+        } else if (publicView.createdAt instanceof Date) {
+          // Already a Date object
+          createdAt = publicView.createdAt;
+        } else if (publicView.createdAt._seconds !== undefined) {
+          // Firestore Timestamp object
+          createdAt = new Date(publicView.createdAt._seconds * 1000);
+        } else {
+          // Try to parse as string or number
+          createdAt = new Date(publicView.createdAt);
+        }
+
         if (isNaN(createdAt.getTime())) {
-          console.warn('Invalid date:', publicView.createdAt);
+          console.warn('Invalid date after conversion:', publicView.createdAt);
           return;
         }
 
