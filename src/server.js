@@ -520,7 +520,8 @@ app.put('/api/reports/:id', authenticateUser, async (req, res) => {
       shareModelNumber: req.body.shareModelNumber !== undefined ? req.body.shareModelNumber : report.shareModelNumber,
       address: req.body.address,
       shareAddress: req.body.shareAddress !== undefined ? req.body.shareAddress : report.shareFullAddress,
-      issue: req.body.issue
+      issue: req.body.issue,
+      rating: req.body.rating !== undefined ? parseInt(req.body.rating) : (report.rating || 1)
     };
 
     // Validate required fields

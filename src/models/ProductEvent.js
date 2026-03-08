@@ -13,6 +13,7 @@ export class ProductEvent {
 
     // Issue Details
     this.issue = data.issue;
+    this.rating = data.rating || 1; // 1-5 star rating (1 = worst, 5 = best)
 
     // Location Data
     this.address = data.address; // PRIVATE - full address
@@ -49,6 +50,7 @@ export class ProductEvent {
       model: this.model,
       modelNumber: (this.shareModelNumber || canViewPrivate) ? this.modelNumber : '[PRIVATE]',
       issue: this.issue,
+      rating: this.rating,
       address: (this.shareFullAddress || canViewPrivate) ? this.address : '[PRIVATE]',
       zipCode: this.zipCode,
       nearestIntersection: this.nearestIntersection,
@@ -125,6 +127,7 @@ export class ProductEvent {
       model: this.model,
       modelNumber: this.modelNumber,
       issue: this.issue,
+      rating: this.rating,
       address: this.address,
       zipCode: this.zipCode,
       nearestIntersection: this.nearestIntersection,

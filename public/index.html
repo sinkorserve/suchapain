@@ -833,6 +833,59 @@
         .btn-cancel:hover {
             background: #d0d0d0;
         }
+
+        /* Star Rating */
+        .star-rating {
+            display: flex;
+            gap: 5px;
+            font-size: 28px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .star {
+            color: #ddd;
+            transition: color 0.2s;
+        }
+
+        .star.filled {
+            color: #ffc107;
+        }
+
+        .star:hover,
+        .star.hover {
+            color: #ffc107;
+        }
+
+        .rating-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .rating-container {
+            margin-bottom: 15px;
+        }
+
+        .rating-text {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .median-rating {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .median-rating .star {
+            font-size: 14px;
+            cursor: default;
+        }
     </style>
 </head>
 <body>
@@ -944,6 +997,19 @@
                             <label>Issue Description *</label>
                             <textarea id="issue" placeholder="Describe the problem..." required></textarea>
                         </div>
+
+                        <div class="rating-container">
+                            <label class="rating-label">Quality Rating *</label>
+                            <div class="star-rating" id="rating">
+                                <span class="star" data-rating="1">★</span>
+                                <span class="star" data-rating="2">★</span>
+                                <span class="star" data-rating="3">★</span>
+                                <span class="star" data-rating="4">★</span>
+                                <span class="star" data-rating="5">★</span>
+                            </div>
+                            <div class="rating-text" id="ratingText">Click to rate (1 = worst, 5 = best)</div>
+                            <input type="hidden" id="ratingValue" value="1" required>
+                        </div>
                     </div>
 
                     <button type="submit" class="submit-btn">Submit Report</button>
@@ -1017,11 +1083,69 @@
         }
 
         // Initialize
+        // Initialize star rating functionality
+        function initStarRating(containerId, valueId, textId) {
+            const container = document.getElementById(containerId);
+            const valueInput = document.getElementById(valueId);
+            const textEl = document.getElementById(textId);
+            const stars = container.querySelectorAll('.star');
+
+            let currentRating = parseInt(valueInput.value) || 1;
+
+            // Set initial rating
+            updateStarDisplay(currentRating);
+
+            function updateStarDisplay(rating) {
+                stars.forEach((star, index) => {
+                    if (index < rating) {
+                        star.classList.add('filled');
+                    } else {
+                        star.classList.remove('filled');
+                    }
+                });
+                currentRating = rating;
+                valueInput.value = rating;
+                const ratingLabels = ['Worst', 'Poor', 'Average', 'Good', 'Excellent'];
+                textEl.textContent = `${rating} star${rating > 1 ? 's' : ''} - ${ratingLabels[rating - 1]}`;
+            }
+
+            stars.forEach((star) => {
+                star.addEventListener('click', () => {
+                    const rating = parseInt(star.getAttribute('data-rating'));
+                    updateStarDisplay(rating);
+                });
+
+                star.addEventListener('mouseenter', () => {
+                    const rating = parseInt(star.getAttribute('data-rating'));
+                    stars.forEach((s, index) => {
+                        if (index < rating) {
+                            s.classList.add('hover');
+                        } else {
+                            s.classList.remove('hover');
+                        }
+                    });
+                });
+            });
+
+            container.addEventListener('mouseleave', () => {
+                stars.forEach((s) => s.classList.remove('hover'));
+            });
+
+            return {
+                setRating: updateStarDisplay,
+                getRating: () => currentRating
+            };
+        }
+
         async function init() {
             await loadAllReports();
             populateChartFilters(); // Populate dropdowns after reports are loaded
             await loadChartData('1Y');
             initializeMap();
+
+            // Initialize star ratings
+            initStarRating('rating', 'ratingValue', 'ratingText');
+            initStarRating('editRating', 'editRatingValue', 'editRatingText');
         }
 
         // Load all reports from database
@@ -1080,10 +1204,12 @@
                 if (!aggregated[key]) {
                     aggregated[key] = {
                         name: displayName,
-                        count: 0
+                        count: 0,
+                        ratings: []
                     };
                 }
                 aggregated[key].count++;
+                aggregated[key].ratings.push(report.rating || 1);
             });
 
             // Convert to array and sort
@@ -1091,17 +1217,34 @@
                 .sort((a, b) => b.count - a.count)
                 .slice(0, 25);
 
+            // Calculate median rating
+            function calculateMedian(ratings) {
+                if (!ratings || ratings.length === 0) return 0;
+                const sorted = [...ratings].sort((a, b) => a - b);
+                const mid = Math.floor(sorted.length / 2);
+                return sorted.length % 2 === 0
+                    ? (sorted[mid - 1] + sorted[mid]) / 2
+                    : sorted[mid];
+            }
+
             // Display list
             const listHTML = sorted.map((item, index) => {
                 const rank = index + 1;
                 const color = getGradientColor(rank, sorted.length);
+                const medianRating = calculateMedian(item.ratings);
+                const medianStars = '★'.repeat(Math.round(medianRating)) + '☆'.repeat(5 - Math.round(medianRating));
 
                 return `
                     <div class="list-item" onclick="selectListItem('${item.name.replace(/'/g, "\\'")}')">
                         <div class="rank-bullet" style="background-color: ${color};"></div>
                         <div class="rank-number">${rank}</div>
                         <div class="item-name">${item.name}</div>
-                        <div class="item-count">${item.count}</div>
+                        <div class="item-count">
+                            ${item.count} issues
+                            <span class="median-rating" title="Median rating: ${medianRating.toFixed(1)}">
+                                <span style="color: #ffc107;">${medianStars}</span>
+                            </span>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -1502,7 +1645,8 @@
                 shareModelNumber: document.getElementById('shareModelNumber').checked,
                 address: document.getElementById('address').value,
                 shareAddress: document.getElementById('shareAddress').checked,
-                issue: document.getElementById('issue').value
+                issue: document.getElementById('issue').value,
+                rating: parseInt(document.getElementById('ratingValue').value) || 1
             };
 
             try {
@@ -1590,6 +1734,19 @@
                 <div class="form-group">
                     <label for="editIssue">Issue Description *</label>
                     <textarea id="editIssue" rows="4" required placeholder="Describe the problem..."></textarea>
+                </div>
+
+                <div class="rating-container">
+                    <label class="rating-label">Quality Rating *</label>
+                    <div class="star-rating" id="editRating">
+                        <span class="star" data-rating="1">★</span>
+                        <span class="star" data-rating="2">★</span>
+                        <span class="star" data-rating="3">★</span>
+                        <span class="star" data-rating="4">★</span>
+                        <span class="star" data-rating="5">★</span>
+                    </div>
+                    <div class="rating-text" id="editRatingText">Click to rate (1 = worst, 5 = best)</div>
+                    <input type="hidden" id="editRatingValue" value="1" required>
                 </div>
 
                 <div id="editError" class="auth-error"></div>
@@ -1927,6 +2084,20 @@
             document.getElementById('editShareAddress').checked = report.shareFullAddress || false;
             document.getElementById('editIssue').value = report.issue || '';
 
+            // Set rating
+            const rating = report.rating || 1;
+            document.getElementById('editRatingValue').value = rating;
+            const editStars = document.querySelectorAll('#editRating .star');
+            editStars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('filled');
+                } else {
+                    star.classList.remove('filled');
+                }
+            });
+            const ratingLabels = ['Worst', 'Poor', 'Average', 'Good', 'Excellent'];
+            document.getElementById('editRatingText').textContent = `${rating} star${rating > 1 ? 's' : ''} - ${ratingLabels[rating - 1]}`;
+
             // Clear error
             document.getElementById('editError').textContent = '';
 
@@ -1964,7 +2135,8 @@
                 shareModelNumber: document.getElementById('editShareModelNumber').checked,
                 address: document.getElementById('editAddress').value,
                 shareAddress: document.getElementById('editShareAddress').checked,
-                issue: document.getElementById('editIssue').value
+                issue: document.getElementById('editIssue').value,
+                rating: parseInt(document.getElementById('editRatingValue').value) || 1
             };
 
             try {
