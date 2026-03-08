@@ -597,6 +597,172 @@
         .user-info button:hover {
             background: #4e01aa;
         }
+
+        /* My Reports Section */
+        .my-reports-section {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .my-reports-section.active {
+            display: block;
+        }
+
+        .my-reports-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 15px 20px;
+            background: #ffffff;
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .my-reports-header:hover {
+            background: #f9f9f9;
+        }
+
+        .my-reports-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #6001d2;
+        }
+
+        .my-reports-count {
+            font-size: 14px;
+            color: #666;
+            background: #f0f0f0;
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+
+        .my-reports-content {
+            display: none;
+        }
+
+        .my-reports-content.expanded {
+            display: block;
+        }
+
+        .report-card {
+            background: #ffffff;
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .report-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .report-card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .report-card-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .report-card-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .report-info-item {
+            font-size: 14px;
+        }
+
+        .report-info-label {
+            font-weight: bold;
+            color: #666;
+            margin-right: 5px;
+        }
+
+        .report-info-value {
+            color: #333;
+        }
+
+        .report-issue {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .report-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .report-btn-edit {
+            background: #6001d2;
+            color: white;
+        }
+
+        .report-btn-edit:hover {
+            background: #4e01aa;
+        }
+
+        .report-btn-delete {
+            background: #d32f2f;
+            color: white;
+        }
+
+        .report-btn-delete:hover {
+            background: #b71c1c;
+        }
+
+        .no-reports {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 16px;
+        }
+
+        .chevron {
+            transition: transform 0.3s;
+            font-size: 20px;
+        }
+
+        .chevron.rotated {
+            transform: rotate(180deg);
+        }
+
+        @media (max-width: 768px) {
+            .report-card-info {
+                grid-template-columns: 1fr;
+            }
+
+            .report-actions {
+                flex-direction: column;
+            }
+
+            .report-btn {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -721,6 +887,22 @@
                     <div class="card-title">Reports by Location (ZIP Code)</div>
                 </div>
                 <div id="map"></div>
+            </div>
+        </div>
+
+        <!-- My Reports Section -->
+        <div id="myReportsSection" class="my-reports-section">
+            <div class="my-reports-header" onclick="toggleMyReports()">
+                <div>
+                    <div class="my-reports-title">My Reports</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="my-reports-count" id="myReportsCount">0 reports</div>
+                    <div class="chevron" id="myReportsChevron">▼</div>
+                </div>
+            </div>
+            <div id="myReportsContent" class="my-reports-content">
+                <div id="myReportsList"></div>
             </div>
         </div>
     </div>
@@ -1484,6 +1666,168 @@
 
         // Initialize Firebase on page load
         initFirebase();
+
+        // My Reports functionality
+        let myReportsExpanded = false;
+        let myReports = [];
+
+        function toggleMyReports() {
+            myReportsExpanded = !myReportsExpanded;
+            const content = document.getElementById('myReportsContent');
+            const chevron = document.getElementById('myReportsChevron');
+
+            if (myReportsExpanded) {
+                content.classList.add('expanded');
+                chevron.classList.add('rotated');
+                loadMyReports();
+            } else {
+                content.classList.remove('expanded');
+                chevron.classList.remove('rotated');
+            }
+        }
+
+        async function loadMyReports() {
+            if (!currentUser || !authToken) {
+                document.getElementById('myReportsList').innerHTML = '<div class="no-reports">Please sign in to view your reports</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/reports/my`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load reports');
+                }
+
+                const data = await response.json();
+                myReports = data.data || [];
+                displayMyReports(myReports);
+                updateMyReportsCount();
+            } catch (error) {
+                console.error('Error loading my reports:', error);
+                document.getElementById('myReportsList').innerHTML = '<div class="no-reports">Error loading reports</div>';
+            }
+        }
+
+        function displayMyReports(reports) {
+            const listEl = document.getElementById('myReportsList');
+
+            if (!reports || reports.length === 0) {
+                listEl.innerHTML = '<div class="no-reports">You haven\'t submitted any reports yet</div>';
+                return;
+            }
+
+            const reportsHTML = reports.map(report => {
+                const date = report.createdAt ? new Date(report.createdAt._seconds * 1000).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : 'Unknown date';
+
+                const serial = report.modelNumber || 'Not provided';
+                const address = report.address || 'Not provided';
+
+                return `
+                    <div class="report-card">
+                        <div class="report-card-header">
+                            <div>
+                                <div class="report-card-title">${report.make} ${report.model}</div>
+                                <div class="report-card-date">${date}</div>
+                            </div>
+                        </div>
+                        <div class="report-card-info">
+                            <div class="report-info-item">
+                                <span class="report-info-label">Category:</span>
+                                <span class="report-info-value">${report.category}</span>
+                            </div>
+                            <div class="report-info-item">
+                                <span class="report-info-label">Serial Number:</span>
+                                <span class="report-info-value">${serial}</span>
+                            </div>
+                            <div class="report-info-item">
+                                <span class="report-info-label">Location:</span>
+                                <span class="report-info-value">${report.zipCode || 'Not provided'}</span>
+                            </div>
+                            <div class="report-info-item">
+                                <span class="report-info-label">Address:</span>
+                                <span class="report-info-value">${address}</span>
+                            </div>
+                        </div>
+                        <div class="report-issue">
+                            <strong>Issue:</strong> ${report.issue}
+                        </div>
+                        <div class="report-actions">
+                            <button class="report-btn report-btn-delete" onclick="deleteReport('${report.id}')">Delete Report</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            listEl.innerHTML = reportsHTML;
+        }
+
+        async function deleteReport(reportId) {
+            if (!confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/reports/${reportId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to delete report');
+                }
+
+                // Remove from local array
+                myReports = myReports.filter(r => r.id !== reportId);
+                displayMyReports(myReports);
+                updateMyReportsCount();
+
+                // Reload other data
+                await loadAllReports();
+                await loadChartData(currentTimeline);
+                await loadMapMarkers();
+
+                alert('Report deleted successfully');
+            } catch (error) {
+                console.error('Error deleting report:', error);
+                alert('Failed to delete report: ' + error.message);
+            }
+        }
+
+        function updateMyReportsCount() {
+            const count = myReports.length;
+            const countEl = document.getElementById('myReportsCount');
+            countEl.textContent = `${count} report${count !== 1 ? 's' : ''}`;
+        }
+
+        // Update updateUserUI to show/hide My Reports section
+        const originalUpdateUserUI = updateUserUI;
+        updateUserUI = function(user) {
+            originalUpdateUserUI(user);
+            const myReportsSection = document.getElementById('myReportsSection');
+            if (user) {
+                myReportsSection.classList.add('active');
+                updateMyReportsCount();
+            } else {
+                myReportsSection.classList.remove('active');
+                myReportsExpanded = false;
+                document.getElementById('myReportsContent').classList.remove('expanded');
+                document.getElementById('myReportsChevron').classList.remove('rotated');
+            }
+        };
     </script>
 </body>
 </html>

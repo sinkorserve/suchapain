@@ -435,6 +435,26 @@ app.get('/api/reports/map/all', optionalAuth, async (req, res) => {
   }
 });
 
+// Get current user's reports (authenticated)
+app.get('/api/reports/my', authenticateUser, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const reports = await firebaseService.queryProductEvents({ createdBy: userId });
+
+    res.json({
+      success: true,
+      count: reports.length,
+      data: reports
+    });
+  } catch (error) {
+    console.error('Error fetching user reports:', error);
+    res.status(500).json({
+      error: 'Failed to fetch your reports',
+      message: error.message
+    });
+  }
+});
+
 // Query reports with filters
 app.get('/api/reports', async (req, res) => {
   try {
@@ -463,6 +483,45 @@ app.get('/api/reports', async (req, res) => {
     console.error('Error querying reports:', error);
     res.status(500).json({
       error: 'Failed to query reports',
+      message: error.message
+    });
+  }
+});
+
+// Delete a report (only by owner)
+app.delete('/api/reports/:id', authenticateUser, async (req, res) => {
+  try {
+    const reportId = req.params.id;
+    const userId = req.user.uid;
+
+    // Get the report first to check ownership
+    const report = await firebaseService.getProductEvent(reportId);
+
+    if (!report) {
+      return res.status(404).json({
+        error: 'Report not found'
+      });
+    }
+
+    // Check if user is the owner
+    if (report.createdBy !== userId) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'You can only delete your own reports'
+      });
+    }
+
+    // Delete the report
+    await firebaseService.deleteProductEvent(reportId);
+
+    res.json({
+      success: true,
+      message: 'Report deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting report:', error);
+    res.status(500).json({
+      error: 'Failed to delete report',
       message: error.message
     });
   }
