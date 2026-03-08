@@ -292,9 +292,10 @@ app.get('/api/reports/timeseries', optionalAuth, async (req, res) => {
     const requesterId = req.user ? req.user.uid : null;
     const brand = req.query.brand;
     const model = req.query.model;
+    const serial = req.query.serial;
     const range = req.query.range || '1Y'; // 1M, 3M, 6M, 1Y, 5Y
 
-    console.log('Fetching time series data:', { range, brand, model });
+    console.log('Fetching time series data:', { range, brand, model, serial });
 
     const events = await firebaseService.queryProductEvents({});
     console.log(`Found ${events.length} events`);
@@ -350,9 +351,10 @@ app.get('/api/reports/timeseries', optionalAuth, async (req, res) => {
 
         if (createdAt < startDate) return;
 
-        // Filter by brand/model if provided
+        // Filter by brand/model/serial if provided
         if (brand && publicView.make !== brand) return;
-        if (model && `${publicView.make} ${publicView.model}` !== model) return;
+        if (model && publicView.model !== model) return;
+        if (serial && publicView.modelNumber !== serial) return;
 
         const dateKey = createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
 
