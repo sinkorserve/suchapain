@@ -294,7 +294,10 @@ app.get('/api/reports/timeseries', optionalAuth, async (req, res) => {
     const model = req.query.model;
     const range = req.query.range || '1Y'; // 1M, 3M, 6M, 1Y, 5Y
 
+    console.log('Fetching time series data:', { range, brand, model });
+
     const events = await firebaseService.queryProductEvents({});
+    console.log(`Found ${events.length} events`);
 
     // Calculate date range
     const now = new Date();
@@ -342,22 +345,34 @@ app.get('/api/reports/timeseries', optionalAuth, async (req, res) => {
 
     // Fill in missing dates with 0 counts for smooth chart
     const filledData = [];
-    for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
-      const dateKey = d.toISOString().split('T')[0];
+    const currentDate = new Date(startDate);
+    const maxDays = daysBack + 1; // Prevent infinite loops
+    let dayCount = 0;
+
+    while (currentDate <= now && dayCount < maxDays) {
+      const dateKey = currentDate.toISOString().split('T')[0];
       const existing = sortedData.find(item => item.date === dateKey);
       filledData.push(existing || { date: dateKey, count: 0, categories: {} });
+
+      currentDate.setDate(currentDate.getDate() + 1);
+      dayCount++;
     }
 
     res.json({
       success: true,
       range: range,
+      startDate: startDate.toISOString(),
+      endDate: now.toISOString(),
+      dataPoints: filledData.length,
       data: filledData
     });
   } catch (error) {
     console.error('Error fetching time series:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       error: 'Failed to fetch time series',
-      message: error.message
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
