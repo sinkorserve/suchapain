@@ -763,6 +763,76 @@
                 width: 100%;
             }
         }
+
+        /* Edit Report Modal */
+        .edit-modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+        }
+
+        .edit-modal.active {
+            display: flex;
+        }
+
+        .edit-modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .edit-modal-header {
+            font-size: 24px;
+            font-weight: bold;
+            color: #6001d2;
+            margin-bottom: 20px;
+        }
+
+        .edit-modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .edit-modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            background: #6001d2;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #4e01aa;
+        }
+
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-cancel:hover {
+            background: #d0d0d0;
+        }
     </style>
 </head>
 <body>
@@ -1470,6 +1540,68 @@
         init();
     </script>
 
+    <!-- Edit Report Modal -->
+    <div id="editModal" class="edit-modal">
+        <div class="edit-modal-content">
+            <span class="close-modal" onclick="closeEditModal()">&times;</span>
+            <div class="edit-modal-header">Edit Report</div>
+
+            <form id="editReportForm">
+                <div class="form-group">
+                    <label for="editCategory">Category *</label>
+                    <select id="editCategory" required>
+                        <option value="">Select Category</option>
+                        <option value="Appliances">Appliances</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Automotive">Automotive</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editMake">Brand/Make *</label>
+                    <input type="text" id="editMake" required placeholder="e.g., Samsung, GE, Apple">
+                </div>
+
+                <div class="form-group">
+                    <label for="editModel">Model *</label>
+                    <input type="text" id="editModel" required placeholder="e.g., RF28R7351SR">
+                </div>
+
+                <div class="form-group">
+                    <label for="editModelNumber">Serial Number (Optional)</label>
+                    <input type="text" id="editModelNumber" placeholder="e.g., SN1234567890">
+                    <label style="display: block; margin-top: 5px;">
+                        <input type="checkbox" id="editShareModelNumber">
+                        Share serial number publicly
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="editAddress">Address *</label>
+                    <input type="text" id="editAddress" required placeholder="Full address for location">
+                    <label style="display: block; margin-top: 5px;">
+                        <input type="checkbox" id="editShareAddress">
+                        Share full address publicly
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="editIssue">Issue Description *</label>
+                    <textarea id="editIssue" rows="4" required placeholder="Describe the problem..."></textarea>
+                </div>
+
+                <div id="editError" class="auth-error"></div>
+
+                <div class="edit-modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn-save">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Auth Modal -->
     <div id="authModal" class="auth-modal">
         <div class="auth-modal-content">
@@ -1763,6 +1895,7 @@
                             <strong>Issue:</strong> ${report.issue}
                         </div>
                         <div class="report-actions">
+                            <button class="report-btn report-btn-edit" onclick="openEditModal('${report.id}')">Edit Report</button>
                             <button class="report-btn report-btn-delete" onclick="deleteReport('${report.id}')">Delete Report</button>
                         </div>
                     </div>
@@ -1771,6 +1904,116 @@
 
             listEl.innerHTML = reportsHTML;
         }
+
+        // Edit Report functionality
+        let currentEditingReportId = null;
+
+        function openEditModal(reportId) {
+            const report = myReports.find(r => r.id === reportId);
+            if (!report) {
+                alert('Report not found');
+                return;
+            }
+
+            currentEditingReportId = reportId;
+
+            // Pre-populate form fields
+            document.getElementById('editCategory').value = report.category || '';
+            document.getElementById('editMake').value = report.make || '';
+            document.getElementById('editModel').value = report.model || '';
+            document.getElementById('editModelNumber').value = report.modelNumber || '';
+            document.getElementById('editShareModelNumber').checked = report.shareModelNumber || false;
+            document.getElementById('editAddress').value = report.address || '';
+            document.getElementById('editShareAddress').checked = report.shareFullAddress || false;
+            document.getElementById('editIssue').value = report.issue || '';
+
+            // Clear error
+            document.getElementById('editError').textContent = '';
+
+            // Show modal
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+            currentEditingReportId = null;
+            document.getElementById('editReportForm').reset();
+            document.getElementById('editError').textContent = '';
+        }
+
+        // Handle edit form submission
+        document.getElementById('editReportForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!currentEditingReportId) {
+                alert('No report selected for editing');
+                return;
+            }
+
+            const errorEl = document.getElementById('editError');
+            const submitBtn = e.target.querySelector('.btn-save');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+            errorEl.textContent = '';
+
+            const updatedData = {
+                category: document.getElementById('editCategory').value,
+                make: document.getElementById('editMake').value,
+                model: document.getElementById('editModel').value,
+                modelNumber: document.getElementById('editModelNumber').value || null,
+                shareModelNumber: document.getElementById('editShareModelNumber').checked,
+                address: document.getElementById('editAddress').value,
+                shareAddress: document.getElementById('editShareAddress').checked,
+                issue: document.getElementById('editIssue').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/reports/${currentEditingReportId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to update report');
+                }
+
+                const result = await response.json();
+
+                // Update local array
+                const index = myReports.findIndex(r => r.id === currentEditingReportId);
+                if (index !== -1) {
+                    myReports[index] = result.data;
+                }
+
+                displayMyReports(myReports);
+                closeEditModal();
+
+                // Reload other data
+                await loadAllReports();
+                await loadChartData(currentTimeline);
+                await loadMapMarkers();
+
+                alert('Report updated successfully');
+            } catch (error) {
+                console.error('Error updating report:', error);
+                errorEl.textContent = error.message;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Save Changes';
+            }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('editModal').onclick = function(event) {
+            if (event.target === document.getElementById('editModal')) {
+                closeEditModal();
+            }
+        };
 
         async function deleteReport(reportId) {
             if (!confirm('Are you sure you want to delete this report? This action cannot be undone.')) {

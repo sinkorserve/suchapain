@@ -488,6 +488,97 @@ app.get('/api/reports', async (req, res) => {
   }
 });
 
+// Update a report (only by owner)
+app.put('/api/reports/:id', authenticateUser, async (req, res) => {
+  try {
+    const reportId = req.params.id;
+    const userId = req.user.uid;
+
+    // Get the report first to check ownership
+    const report = await firebaseService.getProductEvent(reportId);
+
+    if (!report) {
+      return res.status(404).json({
+        error: 'Report not found'
+      });
+    }
+
+    // Check if user is the owner
+    if (report.createdBy !== userId) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'You can only edit your own reports'
+      });
+    }
+
+    // Extract updatable fields from request body
+    const updates = {
+      category: req.body.category,
+      make: req.body.make,
+      model: req.body.model,
+      modelNumber: req.body.modelNumber || null,
+      shareModelNumber: req.body.shareModelNumber !== undefined ? req.body.shareModelNumber : report.shareModelNumber,
+      address: req.body.address,
+      shareAddress: req.body.shareAddress !== undefined ? req.body.shareAddress : report.shareFullAddress,
+      issue: req.body.issue
+    };
+
+    // Validate required fields
+    if (!updates.category || !updates.make || !updates.model || !updates.address || !updates.issue) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        message: 'Category, make, model, address, and issue are required'
+      });
+    }
+
+    // Geocode address if it changed
+    let location = report.location;
+    let zipCode = report.zipCode;
+    let displayLocation = report.displayLocation;
+
+    if (updates.address !== report.address) {
+      try {
+        const geocodeResult = await geocodingService.geocode(updates.address);
+        location = geocodeResult.location;
+        zipCode = geocodeResult.zipCode;
+        displayLocation = geocodeResult.displayLocation;
+      } catch (geocodeError) {
+        console.error('Geocoding error:', geocodeError);
+        return res.status(400).json({
+          error: 'Invalid address',
+          message: 'Could not geocode the provided address'
+        });
+      }
+    }
+
+    // Update the report
+    const updatedData = {
+      ...updates,
+      location,
+      zipCode,
+      displayLocation,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    await firebaseService.updateProductEvent(reportId, updatedData);
+
+    // Fetch updated report
+    const updatedReport = await firebaseService.getProductEvent(reportId);
+
+    res.json({
+      success: true,
+      message: 'Report updated successfully',
+      data: updatedReport
+    });
+  } catch (error) {
+    console.error('Error updating report:', error);
+    res.status(500).json({
+      error: 'Failed to update report',
+      message: error.message
+    });
+  }
+});
+
 // Delete a report (only by owner)
 app.delete('/api/reports/:id', authenticateUser, async (req, res) => {
   try {
