@@ -322,50 +322,40 @@ app.get('/api/reports/timeseries', optionalAuth, async (req, res) => {
           return;
         }
 
-        const publicView = event.getPublicView(requesterId);
-        if (!publicView || !publicView.createdAt) {
-          console.warn('Invalid publicView or missing createdAt:', publicView);
-          return;
-        }
-
-        // Handle Firebase Timestamp objects
+        // Handle Firebase Timestamp objects for createdAt
         let createdAt;
-        if (publicView.createdAt.toDate && typeof publicView.createdAt.toDate === 'function') {
+        if (event.createdAt.toDate && typeof event.createdAt.toDate === 'function') {
           // Firebase Timestamp
-          createdAt = publicView.createdAt.toDate();
-        } else if (publicView.createdAt instanceof Date) {
+          createdAt = event.createdAt.toDate();
+        } else if (event.createdAt instanceof Date) {
           // Already a Date object
-          createdAt = publicView.createdAt;
-        } else if (publicView.createdAt._seconds !== undefined) {
+          createdAt = event.createdAt;
+        } else if (event.createdAt._seconds !== undefined) {
           // Firestore Timestamp object
-          createdAt = new Date(publicView.createdAt._seconds * 1000);
+          createdAt = new Date(event.createdAt._seconds * 1000);
         } else {
           // Try to parse as string or number
-          createdAt = new Date(publicView.createdAt);
+          createdAt = new Date(event.createdAt);
         }
 
         if (isNaN(createdAt.getTime())) {
-          console.warn('Invalid date after conversion:', publicView.createdAt);
+          console.warn('Invalid date after conversion:', event.createdAt);
           return;
         }
 
         if (createdAt < startDate) return;
 
-        // Filter by brand/model/serial if provided
-        if (brand && publicView.make !== brand) {
-          console.log(`Filtered out by brand: ${publicView.make} !== ${brand}`);
+        // Filter by brand/model/serial using RAW event data (not publicView)
+        // This allows filtering by serial even when it's marked private
+        if (brand && event.make !== brand) {
           return;
         }
-        if (model && publicView.model !== model) {
-          console.log(`Filtered out by model: ${publicView.model} !== ${model}`);
+        if (model && event.model !== model) {
           return;
         }
-        if (serial && publicView.modelNumber !== serial) {
-          console.log(`Filtered out by serial: ${publicView.modelNumber} !== ${serial}`);
+        if (serial && event.modelNumber !== serial) {
           return;
         }
-
-        console.log('Event passed filters:', { make: publicView.make, model: publicView.model, modelNumber: publicView.modelNumber });
 
         const dateKey = createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
 
@@ -378,8 +368,9 @@ app.get('/api/reports/timeseries', optionalAuth, async (req, res) => {
         }
 
         timeSeriesData[dateKey].count++;
-        timeSeriesData[dateKey].categories[publicView.category] =
-          (timeSeriesData[dateKey].categories[publicView.category] || 0) + 1;
+        // Use event.category directly instead of publicView
+        timeSeriesData[dateKey].categories[event.category] =
+          (timeSeriesData[dateKey].categories[event.category] || 0) + 1;
       } catch (eventError) {
         console.error('Error processing event:', eventError);
         // Continue with next event
