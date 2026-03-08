@@ -622,8 +622,8 @@
         // Initialize
         async function init() {
             await loadAllReports();
+            populateChartFilters(); // Populate dropdowns after reports are loaded
             await loadChartData('1Y');
-            populateChartFilters();
             initializeMap();
         }
 
@@ -841,7 +841,7 @@
         async function initializeMap() {
             try {
                 // Load Google Maps API
-                const response = await fetch(`${API_BASE}/api/config/google-maps-key`);
+                const response = await fetch(`${API_BASE}/api/google-maps-key`);
                 const config = await response.json();
 
                 if (!window.google) {
