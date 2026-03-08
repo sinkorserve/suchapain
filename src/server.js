@@ -352,9 +352,20 @@ app.get('/api/reports/timeseries', optionalAuth, async (req, res) => {
         if (createdAt < startDate) return;
 
         // Filter by brand/model/serial if provided
-        if (brand && publicView.make !== brand) return;
-        if (model && publicView.model !== model) return;
-        if (serial && publicView.modelNumber !== serial) return;
+        if (brand && publicView.make !== brand) {
+          console.log(`Filtered out by brand: ${publicView.make} !== ${brand}`);
+          return;
+        }
+        if (model && publicView.model !== model) {
+          console.log(`Filtered out by model: ${publicView.model} !== ${model}`);
+          return;
+        }
+        if (serial && publicView.modelNumber !== serial) {
+          console.log(`Filtered out by serial: ${publicView.modelNumber} !== ${serial}`);
+          return;
+        }
+
+        console.log('Event passed filters:', { make: publicView.make, model: publicView.model, modelNumber: publicView.modelNumber });
 
         const dateKey = createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
 
