@@ -490,10 +490,10 @@
                 <div class="card-header">
                     <div class="card-title" id="chartTitle">Product Complaints Trend</div>
                     <div class="chart-filters">
-                        <select id="chartBrandFilter" onchange="updateChartFilters()">
+                        <select id="chartBrandFilter" onchange="handleBrandChange()">
                             <option value="">All Brands</option>
                         </select>
-                        <select id="chartModelFilter" onchange="updateChartFilters()">
+                        <select id="chartModelFilter" onchange="handleModelChange()">
                             <option value="">All Models</option>
                         </select>
                         <select id="chartSerialFilter" onchange="updateChartFilters()">
@@ -723,14 +723,8 @@
             if (!allReports || allReports.length === 0) return;
 
             const brands = new Set();
-            const models = new Set();
-            const serials = new Set();
-
             allReports.forEach(report => {
                 if (report.make) brands.add(report.make);
-                if (report.model) models.add(report.model);
-                const serial = report.publicView?.modelNumber || report.modelNumber;
-                if (serial) serials.add(serial);
             });
 
             // Populate brand dropdown
@@ -738,12 +732,58 @@
             brandSelect.innerHTML = '<option value="">All Brands</option>' +
                 Array.from(brands).sort().map(b => `<option value="${b}">${b}</option>`).join('');
 
-            // Populate model dropdown
+            // Populate model and serial dropdowns (initially show all)
+            updateModelDropdown();
+            updateSerialDropdown();
+        }
+
+        // Update model dropdown based on selected brand
+        function updateModelDropdown() {
+            const selectedBrand = document.getElementById('chartBrandFilter').value;
+            const models = new Set();
+
+            allReports.forEach(report => {
+                // If brand is selected, only show models for that brand
+                if (selectedBrand) {
+                    if (report.make === selectedBrand && report.model) {
+                        models.add(report.model);
+                    }
+                } else {
+                    // Show all models if no brand selected
+                    if (report.model) models.add(report.model);
+                }
+            });
+
             const modelSelect = document.getElementById('chartModelFilter');
             modelSelect.innerHTML = '<option value="">All Models</option>' +
                 Array.from(models).sort().map(m => `<option value="${m}">${m}</option>`).join('');
+        }
 
-            // Populate serial dropdown
+        // Update serial dropdown based on selected model
+        function updateSerialDropdown() {
+            const selectedBrand = document.getElementById('chartBrandFilter').value;
+            const selectedModel = document.getElementById('chartModelFilter').value;
+            const serials = new Set();
+
+            allReports.forEach(report => {
+                const serial = report.publicView?.modelNumber || report.modelNumber;
+
+                // If model is selected, only show serials for that model
+                if (selectedModel) {
+                    if (report.model === selectedModel && serial) {
+                        serials.add(serial);
+                    }
+                } else if (selectedBrand) {
+                    // If only brand is selected, show serials for that brand
+                    if (report.make === selectedBrand && serial) {
+                        serials.add(serial);
+                    }
+                } else {
+                    // Show all serials if no filters selected
+                    if (serial) serials.add(serial);
+                }
+            });
+
             const serialSelect = document.getElementById('chartSerialFilter');
             serialSelect.innerHTML = '<option value="">All Serials</option>' +
                 Array.from(serials).sort().map(s => `<option value="${s}">${s}</option>`).join('');
@@ -756,6 +796,22 @@
             const serial = document.getElementById('chartSerialFilter').value;
 
             loadChartData(currentTimeline, brand, model, serial);
+        }
+
+        // Handle brand change - update model dropdown and reset model/serial selections
+        function handleBrandChange() {
+            document.getElementById('chartModelFilter').value = '';
+            document.getElementById('chartSerialFilter').value = '';
+            updateModelDropdown();
+            updateSerialDropdown();
+            updateChartFilters();
+        }
+
+        // Handle model change - update serial dropdown and reset serial selection
+        function handleModelChange() {
+            document.getElementById('chartSerialFilter').value = '';
+            updateSerialDropdown();
+            updateChartFilters();
         }
 
         // Load chart data
@@ -851,8 +907,8 @@
                         x: {
                             ticks: {
                                 autoSkip: false,
-                                maxRotation: 45,
-                                minRotation: 45,
+                                maxRotation: 0,
+                                minRotation: 0,
                                 font: {
                                     size: 10
                                 },
