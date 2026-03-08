@@ -542,6 +542,84 @@ app.post('/api/geocode', async (req, res) => {
   }
 });
 
+// Get user's location from IP address
+app.get('/api/location/ip', async (req, res) => {
+  try {
+    // Get client IP address
+    const ip = req.headers['x-forwarded-for']?.split(',')[0] ||
+               req.connection.remoteAddress ||
+               req.socket.remoteAddress;
+
+    // For localhost/development, return San Francisco as default
+    if (ip === '127.0.0.1' || ip === '::1' || ip?.includes('127.0.0.1')) {
+      return res.json({
+        success: true,
+        location: {
+          city: 'San Francisco',
+          state: 'CA',
+          zipCode: '94102',
+          lat: 37.7749,
+          lng: -122.4194,
+          country: 'US'
+        },
+        ip: 'localhost',
+        isDevelopment: true
+      });
+    }
+
+    // In production, use ipapi.co or similar service
+    // For now, return default US location
+    const response = await fetch(`https://ipapi.co/${ip}/json/`);
+    const data = await response.json();
+
+    if (data && data.latitude && data.longitude) {
+      return res.json({
+        success: true,
+        location: {
+          city: data.city,
+          state: data.region_code,
+          zipCode: data.postal,
+          lat: data.latitude,
+          lng: data.longitude,
+          country: data.country_code
+        },
+        ip: ip
+      });
+    } else {
+      // Fallback to center of US
+      return res.json({
+        success: true,
+        location: {
+          city: 'United States',
+          state: '',
+          zipCode: '',
+          lat: 37.0902,
+          lng: -95.7129,
+          country: 'US'
+        },
+        ip: ip,
+        isFallback: true
+      });
+    }
+  } catch (error) {
+    console.error('Error getting IP location:', error);
+    // Return US center as fallback
+    res.json({
+      success: true,
+      location: {
+        city: 'United States',
+        state: '',
+        zipCode: '',
+        lat: 37.0902,
+        lng: -95.7129,
+        country: 'US'
+      },
+      error: error.message,
+      isFallback: true
+    });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);

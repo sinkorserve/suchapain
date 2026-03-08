@@ -609,6 +609,7 @@
         let allReports = [];
         let googleMapsLoaded = false;
         let map;
+        let userLocation = null;
 
         // Color gradient from red to green
         function getGradientColor(rank, total) {
@@ -837,16 +838,33 @@
             updateChartFilters();
         }
 
+        // Get user's location from IP
+        async function getUserLocation() {
+            try {
+                const response = await fetch(`${API_BASE}/api/location/ip`);
+                const data = await response.json();
+                if (data.success && data.location) {
+                    userLocation = data.location;
+                    console.log('User location detected:', userLocation);
+                }
+            } catch (error) {
+                console.error('Error getting user location:', error);
+            }
+        }
+
         // Initialize Google Map
         async function initializeMap() {
             try {
-                // Load Google Maps API
+                // Get user's location first
+                await getUserLocation();
+
+                // Load Google Maps API with marker library
                 const response = await fetch(`${API_BASE}/api/google-maps-key`);
                 const config = await response.json();
 
                 if (!window.google) {
                     const script = document.createElement('script');
-                    script.src = `https://maps.googleapis.com/maps/api/js?key=${config.apiKey}&libraries=places`;
+                    script.src = `https://maps.googleapis.com/maps/api/js?key=${config.apiKey}&libraries=marker,places&v=beta`;
                     script.async = true;
                     script.defer = true;
                     script.onload = () => {
@@ -877,28 +895,47 @@
 
                 console.log('ZIP Code data:', zipData); // Debug log
 
-                // Initialize map centered on US
-                map = new google.maps.Map(document.getElementById('map'), {
-                    center: { lat: 37.0902, lng: -95.7129 },
-                    zoom: 4
+                // Determine map center and zoom based on user location
+                let mapCenter = { lat: 37.0902, lng: -95.7129 }; // Default: US center
+                let mapZoom = 4; // Default: Country level
+
+                if (userLocation && userLocation.lat && userLocation.lng) {
+                    mapCenter = { lat: userLocation.lat, lng: userLocation.lng };
+                    mapZoom = 11; // ZIP code level zoom
+                    console.log('Centering map on user location:', userLocation.city, userLocation.zipCode);
+                }
+
+                // Initialize map with AdvancedMarkerElement support
+                const { Map } = await google.maps.importLibrary("maps");
+                const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
+
+                map = new Map(document.getElementById('map'), {
+                    center: mapCenter,
+                    zoom: mapZoom,
+                    mapId: 'SUCHAPAIN_MAP' // Required for AdvancedMarkerElement
                 });
 
-                // Add markers for each ZIP code
+                // Add markers for each ZIP code using AdvancedMarkerElement
                 zipData.forEach(zip => {
                     // Check if location exists and has lat/lng
                     if (zip.location && zip.location.lat && zip.location.lng) {
-                        const marker = new google.maps.Marker({
-                            position: { lat: zip.location.lat, lng: zip.location.lng },
-                            map: map,
-                            title: `${zip.zipCode}: ${zip.count} report(s)`,
-                            label: {
-                                text: zip.count.toString(),
-                                color: 'white',
-                                fontSize: '12px',
-                                fontWeight: 'bold'
-                            }
+                        // Create custom pin with count
+                        const pinBackground = new PinElement({
+                            background: '#6001d2',
+                            borderColor: '#4e01aa',
+                            glyphColor: 'white',
+                            glyph: zip.count.toString(),
+                            scale: 1.2
                         });
 
+                        const marker = new AdvancedMarkerElement({
+                            map: map,
+                            position: { lat: zip.location.lat, lng: zip.location.lng },
+                            content: pinBackground.element,
+                            title: `${zip.zipCode}: ${zip.count} report(s)`
+                        });
+
+                        // Create info window
                         const infoWindow = new google.maps.InfoWindow({
                             content: `
                                 <div style="padding: 10px; font-family: Arial, sans-serif;">
@@ -918,6 +955,7 @@
                             `
                         });
 
+                        // Add click listener
                         marker.addListener('click', () => {
                             infoWindow.open(map, marker);
                         });
