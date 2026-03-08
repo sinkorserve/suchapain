@@ -640,7 +640,8 @@
                 if (!response.ok) throw new Error('Failed to load reports');
 
                 const data = await response.json();
-                allReports = data.reports || [];
+                allReports = data.data || [];
+                console.log('Loaded reports:', allReports.length, allReports);
 
                 // Display initial list (by brand)
                 updateListDisplay('brand');
