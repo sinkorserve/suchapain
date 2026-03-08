@@ -169,30 +169,6 @@ app.post('/api/reports', authenticateUser, async (req, res) => {
   }
 });
 
-// Get a specific report by ID
-app.get('/api/reports/:id', async (req, res) => {
-  try {
-    const report = await firebaseService.getProductEvent(req.params.id);
-
-    if (!report) {
-      return res.status(404).json({
-        error: 'Report not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      data: report
-    });
-  } catch (error) {
-    console.error('Error fetching report:', error);
-    res.status(500).json({
-      error: 'Failed to fetch report',
-      message: error.message
-    });
-  }
-});
-
 // Get reports aggregated by ZIP code for privacy-aware map view
 app.get('/api/reports/map/zipcode', optionalAuth, async (req, res) => {
   try {
@@ -434,6 +410,30 @@ app.get('/api/reports', async (req, res) => {
     console.error('Error querying reports:', error);
     res.status(500).json({
       error: 'Failed to query reports',
+      message: error.message
+    });
+  }
+});
+
+// Get a specific report by ID (MUST be after all other /api/reports/* routes)
+app.get('/api/reports/:id', async (req, res) => {
+  try {
+    const report = await firebaseService.getProductEvent(req.params.id);
+
+    if (!report) {
+      return res.status(404).json({
+        error: 'Report not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: report
+    });
+  } catch (error) {
+    console.error('Error fetching report:', error);
+    res.status(500).json({
+      error: 'Failed to fetch report',
       message: error.message
     });
   }
