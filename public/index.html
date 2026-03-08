@@ -786,7 +786,26 @@
                 trendChart.destroy();
             }
 
-            const labels = data.map(d => d.date);
+            // Format labels to show year on first occurrence and month changes
+            const labels = data.map((d, index) => {
+                const date = new Date(d.date);
+                const month = date.toLocaleDateString('en-US', { month: 'short' });
+                const year = date.getFullYear();
+
+                // Show year if it's the first data point or if year changed
+                if (index === 0 || (index > 0 && new Date(data[index - 1].date).getFullYear() !== year)) {
+                    return year;
+                }
+
+                // Show month if it's the first of the month
+                if (date.getDate() === 1 || index === 0) {
+                    return month;
+                }
+
+                // Don't show label for other days
+                return '';
+            });
+
             const counts = data.map(d => d.count);
 
             trendChart = new Chart(ctx, {
@@ -811,9 +830,40 @@
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    // Show full date in tooltip
+                                    const dataIndex = context[0].dataIndex;
+                                    const date = new Date(data[dataIndex].date);
+                                    return date.toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    });
+                                }
+                            }
                         }
                     },
                     scales: {
+                        x: {
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45,
+                                font: {
+                                    size: 10
+                                },
+                                callback: function(value, index) {
+                                    // Only show non-empty labels
+                                    return labels[index] || '';
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
                         y: {
                             beginAtZero: true,
                             ticks: {
