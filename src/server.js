@@ -315,28 +315,47 @@ app.get('/api/reports/timeseries', optionalAuth, async (req, res) => {
     const timeSeriesData = {};
 
     events.forEach(event => {
-      const publicView = event.getPublicView(requesterId);
-      const createdAt = new Date(publicView.createdAt);
+      try {
+        if (!event || typeof event.getPublicView !== 'function') {
+          console.warn('Invalid event object:', event);
+          return;
+        }
 
-      if (createdAt < startDate) return;
+        const publicView = event.getPublicView(requesterId);
+        if (!publicView || !publicView.createdAt) {
+          console.warn('Invalid publicView or missing createdAt:', publicView);
+          return;
+        }
 
-      // Filter by brand/model if provided
-      if (brand && publicView.make !== brand) return;
-      if (model && `${publicView.make} ${publicView.model}` !== model) return;
+        const createdAt = new Date(publicView.createdAt);
+        if (isNaN(createdAt.getTime())) {
+          console.warn('Invalid date:', publicView.createdAt);
+          return;
+        }
 
-      const dateKey = createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
+        if (createdAt < startDate) return;
 
-      if (!timeSeriesData[dateKey]) {
-        timeSeriesData[dateKey] = {
-          date: dateKey,
-          count: 0,
-          categories: {}
-        };
+        // Filter by brand/model if provided
+        if (brand && publicView.make !== brand) return;
+        if (model && `${publicView.make} ${publicView.model}` !== model) return;
+
+        const dateKey = createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
+
+        if (!timeSeriesData[dateKey]) {
+          timeSeriesData[dateKey] = {
+            date: dateKey,
+            count: 0,
+            categories: {}
+          };
+        }
+
+        timeSeriesData[dateKey].count++;
+        timeSeriesData[dateKey].categories[publicView.category] =
+          (timeSeriesData[dateKey].categories[publicView.category] || 0) + 1;
+      } catch (eventError) {
+        console.error('Error processing event:', eventError);
+        // Continue with next event
       }
-
-      timeSeriesData[dateKey].count++;
-      timeSeriesData[dateKey].categories[publicView.category] =
-        (timeSeriesData[dateKey].categories[publicView.category] || 0) + 1;
     });
 
     // Convert to array and sort by date
