@@ -1033,19 +1033,6 @@
                             <label>Issue Description *</label>
                             <textarea id="issue" placeholder="Describe the problem..." required></textarea>
                         </div>
-
-                        <div class="rating-container">
-                            <label class="rating-label">Quality Rating *</label>
-                            <div class="star-rating" id="rating">
-                                <span class="star" data-rating="1">★</span>
-                                <span class="star" data-rating="2">★</span>
-                                <span class="star" data-rating="3">★</span>
-                                <span class="star" data-rating="4">★</span>
-                                <span class="star" data-rating="5">★</span>
-                            </div>
-                            <div class="rating-text" id="ratingText">Click to rate (1 = worst, 5 = best)</div>
-                            <input type="hidden" id="ratingValue" value="1" required>
-                        </div>
                     </div>
 
                     <button type="submit" class="submit-btn">Submit Report</button>
@@ -1193,10 +1180,6 @@
             await loadChartData('1Y');
             initializeMap();
 
-            // Initialize star ratings
-            initStarRating('rating', 'ratingValue', 'ratingText');
-            initStarRating('editRating', 'editRatingValue', 'editRatingText');
-
             // Auto-detect user's country
             await detectUserCountry();
         }
@@ -1273,11 +1256,20 @@
                     aggregated[key] = {
                         name: displayName,
                         count: 0,
-                        ratings: []
+                        timestamps: [],
+                        users: new Set()
                     };
                 }
                 aggregated[key].count++;
-                aggregated[key].ratings.push(report.rating || 1);
+
+                // Track timestamp for recency calculation
+                const timestamp = report.createdAt._seconds ? report.createdAt._seconds * 1000 : new Date(report.createdAt).getTime();
+                aggregated[key].timestamps.push(timestamp);
+
+                // Track unique users for distribution calculation
+                if (report.createdBy) {
+                    aggregated[key].users.add(report.createdBy);
+                }
             });
 
             // Convert to array and sort
@@ -1285,22 +1277,48 @@
                 .sort((a, b) => b.count - a.count)
                 .slice(0, 25);
 
-            // Calculate median rating
-            function calculateMedian(ratings) {
-                if (!ratings || ratings.length === 0) return 0;
-                const sorted = [...ratings].sort((a, b) => a - b);
-                const mid = Math.floor(sorted.length / 2);
-                return sorted.length % 2 === 0
-                    ? (sorted[mid - 1] + sorted[mid]) / 2
-                    : sorted[mid];
+            // Calculate Multi-Factor Pain Index
+            function calculatePainIndex(item) {
+                const now = Date.now();
+
+                // Factor 1: Frequency Score (40%) - normalized to 0-100
+                const maxReports = Math.max(...sorted.map(i => i.count));
+                const frequencyScore = (item.count / maxReports) * 100;
+
+                // Factor 2: Recency Score (30%) - time-weighted decay
+                let recencyScore = 0;
+                item.timestamps.forEach(timestamp => {
+                    const daysSince = (now - timestamp) / (1000 * 60 * 60 * 24);
+                    // Recent reports weighted more: decay by square root of days
+                    recencyScore += 1 / Math.sqrt(Math.max(daysSince, 0.1));
+                });
+                // Normalize recency score
+                recencyScore = Math.min((recencyScore / item.count) * 20, 100);
+
+                // Factor 3: User Distribution Score (30%)
+                const uniqueUsers = item.users.size;
+                const distributionScore = (uniqueUsers / item.count) * 100;
+
+                // Calculate weighted Pain Index (0-100 scale)
+                const painIndex = (frequencyScore * 0.4) + (recencyScore * 0.3) + (distributionScore * 0.3);
+
+                return Math.min(Math.round(painIndex), 100);
+            }
+
+            // Get Pain Index color based on score
+            function getPainIndexColor(painIndex) {
+                if (painIndex >= 61) return '#dc2626'; // Red - High pain
+                if (painIndex >= 31) return '#f59e0b'; // Yellow - Moderate pain
+                return '#16a34a'; // Green - Low pain
             }
 
             // Display list
             const listHTML = sorted.map((item, index) => {
                 const rank = index + 1;
                 const color = getGradientColor(rank, sorted.length);
-                const medianRating = calculateMedian(item.ratings);
-                const medianStars = '★'.repeat(Math.round(medianRating)) + '☆'.repeat(5 - Math.round(medianRating));
+                const painIndex = calculatePainIndex(item);
+                const painColor = getPainIndexColor(painIndex);
+                const uniqueUsers = item.users.size;
 
                 return `
                     <div class="list-item" onclick="selectListItem('${item.name.replace(/'/g, "\\'")}')">
@@ -1308,9 +1326,9 @@
                         <div class="rank-number">${rank}</div>
                         <div class="item-name">${item.name}</div>
                         <div class="item-count">
-                            ${item.count} issues
-                            <span class="median-rating" title="Median rating: ${medianRating.toFixed(1)}">
-                                <span style="color: #ffc107;">${medianStars}</span>
+                            ${item.count} issues (${uniqueUsers} users)
+                            <span class="median-rating" title="Pain Index: ${painIndex}\nFrequency + Recency + Distribution">
+                                <span style="color: ${painColor}; font-weight: bold;">Pain: ${painIndex}</span>
                             </span>
                         </div>
                     </div>
@@ -1714,8 +1732,7 @@
                 address: document.getElementById('address').value,
                 country: document.getElementById('country').value,
                 shareAddress: document.getElementById('shareAddress').checked,
-                issue: document.getElementById('issue').value,
-                rating: parseInt(document.getElementById('ratingValue').value) || 1
+                issue: document.getElementById('issue').value
             };
 
             try {
@@ -1827,19 +1844,6 @@
                 <div class="form-group">
                     <label for="editIssue">Issue Description *</label>
                     <textarea id="editIssue" rows="4" required placeholder="Describe the problem..."></textarea>
-                </div>
-
-                <div class="rating-container">
-                    <label class="rating-label">Quality Rating *</label>
-                    <div class="star-rating" id="editRating">
-                        <span class="star" data-rating="1">★</span>
-                        <span class="star" data-rating="2">★</span>
-                        <span class="star" data-rating="3">★</span>
-                        <span class="star" data-rating="4">★</span>
-                        <span class="star" data-rating="5">★</span>
-                    </div>
-                    <div class="rating-text" id="editRatingText">Click to rate (1 = worst, 5 = best)</div>
-                    <input type="hidden" id="editRatingValue" value="1" required>
                 </div>
 
                 <div id="editError" class="auth-error"></div>
@@ -2178,20 +2182,6 @@
             document.getElementById('editShareAddress').checked = report.shareFullAddress || false;
             document.getElementById('editIssue').value = report.issue || '';
 
-            // Set rating
-            const rating = report.rating || 1;
-            document.getElementById('editRatingValue').value = rating;
-            const editStars = document.querySelectorAll('#editRating .star');
-            editStars.forEach((star, index) => {
-                if (index < rating) {
-                    star.classList.add('filled');
-                } else {
-                    star.classList.remove('filled');
-                }
-            });
-            const ratingLabels = ['Worst', 'Poor', 'Average', 'Good', 'Excellent'];
-            document.getElementById('editRatingText').textContent = `${rating} star${rating > 1 ? 's' : ''} - ${ratingLabels[rating - 1]}`;
-
             // Clear error
             document.getElementById('editError').textContent = '';
 
@@ -2230,8 +2220,7 @@
                 address: document.getElementById('editAddress').value,
                 country: document.getElementById('editCountry').value,
                 shareAddress: document.getElementById('editShareAddress').checked,
-                issue: document.getElementById('editIssue').value,
-                rating: parseInt(document.getElementById('editRatingValue').value) || 1
+                issue: document.getElementById('editIssue').value
             };
 
             try {

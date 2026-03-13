@@ -151,7 +151,6 @@ app.post('/api/reports', authenticateUser, async (req, res) => {
       issue,
       address,
       country: country || 'US',
-      rating: rating || 1,
       shareFullAddress: shareFullAddress || false,
       shareModelNumber: shareModelNumber || false
     }, userId);
@@ -523,8 +522,7 @@ app.put('/api/reports/:id', authenticateUser, async (req, res) => {
       address: req.body.address,
       country: req.body.country || report.country || 'US',
       shareAddress: req.body.shareAddress !== undefined ? req.body.shareAddress : report.shareFullAddress,
-      issue: req.body.issue,
-      rating: req.body.rating !== undefined ? parseInt(req.body.rating) : (report.rating || 1)
+      issue: req.body.issue
     };
 
     // Validate required fields
