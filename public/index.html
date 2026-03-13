@@ -906,6 +906,18 @@
                 <div class="card-header">
                     <div class="card-title">Top 25 Brands with Most Issues</div>
                     <div class="filter-dropdowns">
+                        <select id="listRegionFilter" onchange="updateListFilter()">
+                            <option value="">Global (All Countries)</option>
+                            <option value="US">United States</option>
+                            <option value="CA">Canada</option>
+                            <option value="MX">Mexico</option>
+                            <option value="GB">United Kingdom</option>
+                            <option value="EU">Europe</option>
+                            <option value="AU">Australia</option>
+                            <option value="JP">Japan</option>
+                            <option value="KR">South Korea</option>
+                            <option value="CN">China</option>
+                        </select>
                         <select id="listFilterType" onchange="updateListFilter()">
                             <option value="brand">Brand</option>
                             <option value="brand_model">Brand + Model</option>
@@ -991,6 +1003,30 @@
                                 <input type="checkbox" id="shareAddress">
                                 <label>Share full address</label>
                             </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Country where purchased *</label>
+                            <select id="country" required>
+                                <option value="">Select country...</option>
+                                <option value="US">United States</option>
+                                <option value="CA">Canada</option>
+                                <option value="MX">Mexico</option>
+                                <option value="GB">United Kingdom</option>
+                                <option value="DE">Germany</option>
+                                <option value="FR">France</option>
+                                <option value="IT">Italy</option>
+                                <option value="ES">Spain</option>
+                                <option value="NL">Netherlands</option>
+                                <option value="AU">Australia</option>
+                                <option value="NZ">New Zealand</option>
+                                <option value="JP">Japan</option>
+                                <option value="KR">South Korea</option>
+                                <option value="CN">China</option>
+                                <option value="IN">India</option>
+                                <option value="BR">Brazil</option>
+                                <option value="OTHER">Other</option>
+                            </select>
                         </div>
 
                         <div class="form-group">
@@ -1137,6 +1173,20 @@
             };
         }
 
+        // Auto-detect country from IP
+        async function detectUserCountry() {
+            try {
+                const response = await fetch(`${API_BASE}/api/location/ip`);
+                const data = await response.json();
+                if (data.success && data.location && data.location.country) {
+                    const countrySelect = document.getElementById('country');
+                    countrySelect.value = data.location.country;
+                }
+            } catch (error) {
+                console.log('Could not auto-detect country:', error);
+            }
+        }
+
         async function init() {
             await loadAllReports();
             populateChartFilters(); // Populate dropdowns after reports are loaded
@@ -1146,6 +1196,9 @@
             // Initialize star ratings
             initStarRating('rating', 'ratingValue', 'ratingText');
             initStarRating('editRating', 'editRatingValue', 'editRatingText');
+
+            // Auto-detect user's country
+            await detectUserCountry();
         }
 
         // Load all reports from database
@@ -1183,9 +1236,24 @@
                 return;
             }
 
+            // Get selected region filter
+            const regionFilter = document.getElementById('listRegionFilter')?.value || '';
+
+            // Filter reports by region
+            const filteredReports = regionFilter
+                ? allReports.filter(report => {
+                    if (regionFilter === 'EU') {
+                        // Europe includes multiple countries
+                        const euCountries = ['GB', 'DE', 'FR', 'IT', 'ES', 'NL'];
+                        return euCountries.includes(report.country);
+                    }
+                    return report.country === regionFilter;
+                })
+                : allReports;
+
             const aggregated = {};
 
-            allReports.forEach(report => {
+            filteredReports.forEach(report => {
                 let key;
                 let displayName;
 
@@ -1644,6 +1712,7 @@
                 modelNumber: document.getElementById('modelNumber').value || null,
                 shareModelNumber: document.getElementById('shareModelNumber').checked,
                 address: document.getElementById('address').value,
+                country: document.getElementById('country').value,
                 shareAddress: document.getElementById('shareAddress').checked,
                 issue: document.getElementById('issue').value,
                 rating: parseInt(document.getElementById('ratingValue').value) || 1
@@ -1729,6 +1798,30 @@
                         <input type="checkbox" id="editShareAddress">
                         Share full address publicly
                     </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="editCountry">Country where purchased *</label>
+                    <select id="editCountry" required>
+                        <option value="">Select country...</option>
+                        <option value="US">United States</option>
+                        <option value="CA">Canada</option>
+                        <option value="MX">Mexico</option>
+                        <option value="GB">United Kingdom</option>
+                        <option value="DE">Germany</option>
+                        <option value="FR">France</option>
+                        <option value="IT">Italy</option>
+                        <option value="ES">Spain</option>
+                        <option value="NL">Netherlands</option>
+                        <option value="AU">Australia</option>
+                        <option value="NZ">New Zealand</option>
+                        <option value="JP">Japan</option>
+                        <option value="KR">South Korea</option>
+                        <option value="CN">China</option>
+                        <option value="IN">India</option>
+                        <option value="BR">Brazil</option>
+                        <option value="OTHER">Other</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
@@ -2081,6 +2174,7 @@
             document.getElementById('editModelNumber').value = report.modelNumber || '';
             document.getElementById('editShareModelNumber').checked = report.shareModelNumber || false;
             document.getElementById('editAddress').value = report.address || '';
+            document.getElementById('editCountry').value = report.country || 'US';
             document.getElementById('editShareAddress').checked = report.shareFullAddress || false;
             document.getElementById('editIssue').value = report.issue || '';
 
@@ -2134,6 +2228,7 @@
                 modelNumber: document.getElementById('editModelNumber').value || null,
                 shareModelNumber: document.getElementById('editShareModelNumber').checked,
                 address: document.getElementById('editAddress').value,
+                country: document.getElementById('editCountry').value,
                 shareAddress: document.getElementById('editShareAddress').checked,
                 issue: document.getElementById('editIssue').value,
                 rating: parseInt(document.getElementById('editRatingValue').value) || 1

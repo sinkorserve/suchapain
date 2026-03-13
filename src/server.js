@@ -130,7 +130,7 @@ app.get('/health', (req, res) => {
 // Create a product event report (REQUIRES AUTHENTICATION)
 app.post('/api/reports', authenticateUser, async (req, res) => {
   try {
-    const { category, make, model, modelNumber, issue, address, shareFullAddress, shareModelNumber } = req.body;
+    const { category, make, model, modelNumber, issue, address, country, rating, shareFullAddress, shareModelNumber } = req.body;
 
     // Validate required fields
     if (!category || !make || !model || !issue || !address) {
@@ -150,6 +150,8 @@ app.post('/api/reports', authenticateUser, async (req, res) => {
       modelNumber,
       issue,
       address,
+      country: country || 'US',
+      rating: rating || 1,
       shareFullAddress: shareFullAddress || false,
       shareModelNumber: shareModelNumber || false
     }, userId);
@@ -519,6 +521,7 @@ app.put('/api/reports/:id', authenticateUser, async (req, res) => {
       modelNumber: req.body.modelNumber || null,
       shareModelNumber: req.body.shareModelNumber !== undefined ? req.body.shareModelNumber : report.shareModelNumber,
       address: req.body.address,
+      country: req.body.country || report.country || 'US',
       shareAddress: req.body.shareAddress !== undefined ? req.body.shareAddress : report.shareFullAddress,
       issue: req.body.issue,
       rating: req.body.rating !== undefined ? parseInt(req.body.rating) : (report.rating || 1)

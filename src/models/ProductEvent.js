@@ -19,6 +19,7 @@ export class ProductEvent {
     this.address = data.address; // PRIVATE - full address
     this.zipCode = data.zipCode; // PUBLIC - extracted from address
     this.nearestIntersection = data.nearestIntersection; // PUBLIC
+    this.country = data.country; // PUBLIC - country code (US, CA, UK, etc.)
 
     // Coordinates
     this.location = data.location; // PRIVATE - exact coordinates
@@ -53,6 +54,7 @@ export class ProductEvent {
       rating: this.rating,
       address: (this.shareFullAddress || canViewPrivate) ? this.address : '[PRIVATE]',
       zipCode: this.zipCode,
+      country: this.country,
       nearestIntersection: this.nearestIntersection,
       location: canViewPrivate ? this.location : this.displayLocation,
       createdAt: this.createdAt,
@@ -130,6 +132,7 @@ export class ProductEvent {
       rating: this.rating,
       address: this.address,
       zipCode: this.zipCode,
+      country: this.country,
       nearestIntersection: this.nearestIntersection,
       location: this.location,
       displayLocation: this.displayLocation,
